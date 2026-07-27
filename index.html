@@ -123,6 +123,78 @@
 
     .btn-submit:active { opacity: 0.85; }
     .section-divider { border: 0; border-top: 1px dashed var(--border-color); margin: 12px 0; }
+
+    /* СТИЛИ МОДАЛЬНОГО ОКНА ДЛЯ ВЫБОРА БРЕНДА И МОДЕЛИ */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: flex-end;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      width: 100%;
+      max-height: 80vh;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      padding: 16px;
+      overflow-y: auto;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: var(--accent-color);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--hint-color);
+      cursor: pointer;
+    }
+
+    .modal-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .modal-item {
+      padding: 12px;
+      background: var(--bg-color);
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .modal-item:active {
+      background: rgba(36, 161, 222, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -163,10 +235,7 @@
     </div>
     
     <label>Адрес объекта</label>
-    <!-- Поле адреса с подключенным списком подсказок -->
     <input type="text" id="address" list="streetList" value="г. Ноябрьск, ул. " placeholder="г. Ноябрьск, ул. Новоселов, д. 4" required>
-    
-    <!-- Выпадающий список с автодополнением по г. Ноябрьск -->
     <datalist id="streetList">
       <option value="г. Ноябрьск, ул. Новоселов, д. ">
       <option value="г. Ноябрьск, ул. Ленина, д. ">
@@ -200,7 +269,10 @@
   <div class="card" id="calcSection">
     <h3>2. Вычислитель</h3>
     <div class="row">
-      <div><label>Тип прибора</label><input type="text" id="calcType" placeholder="СПТ-944"></div>
+      <div>
+        <label>Тип прибора</label>
+        <input type="text" id="calcType" placeholder="Выберите или введите..." readonly onclick="openPicker('calculators', 'calcType')">
+      </div>
       <div><label>Заводской №</label><input type="text" id="calcSn" placeholder="01670"></div>
     </div>
     
@@ -223,7 +295,10 @@
     
     <h4 id="prInTitle">Подающий трубопровод</h4>
     <div class="row">
-      <div><label>Тип прибора</label><input type="text" id="prInType" placeholder="ВЭПС-Р-ПБ2-01"></div>
+      <div>
+        <label>Тип прибора</label>
+        <input type="text" id="prInType" placeholder="Выберите или введите..." readonly onclick="openPicker('flowmeters', 'prInType')">
+      </div>
       <div><label>Ду (мм)</label><input type="number" id="prInDu" placeholder="25"></div>
       <div><label>Заводской №</label><input type="text" id="prInSn" placeholder="7255629"></div>
     </div>
@@ -245,7 +320,10 @@
       <hr class="section-divider">
       <h4 id="prOutTitle">Циркуляционный трубопровод</h4>
       <div class="row">
-        <div><label>Тип прибора</label><input type="text" id="prOutType" placeholder="ВЭПС-Р-ПБ2-01"></div>
+        <div>
+          <label>Тип прибора</label>
+          <input type="text" id="prOutType" placeholder="Выберите или введите..." readonly onclick="openPicker('flowmeters', 'prOutType')">
+        </div>
         <div><label>Ду (мм)</label><input type="number" id="prOutDu" placeholder="25"></div>
         <div><label>Заводской №</label><input type="text" id="prOutSn" placeholder="7255544"></div>
       </div>
@@ -271,7 +349,10 @@
 
     <div id="tempBlock" style="margin-top: 10px;">
       <div class="row">
-        <div><label>Тип комплекта</label><input type="text" id="ktpType" placeholder="КТПТР-06"></div>
+        <div>
+          <label>Тип комплекта</label>
+          <input type="text" id="ktpType" placeholder="Выберите или введите..." readonly onclick="openPicker('temperatures', 'ktpType')">
+        </div>
         <div><label>Зав. № (Подача)</label><input type="text" id="ktpInSn" placeholder="910"></div>
         <div><label>Зав. № (Обр./Цирк.)</label><input type="text" id="ktpOutSn" placeholder="910 A"></div>
       </div>
@@ -319,7 +400,10 @@
     <div id="pressBlock" style="margin-top: 10px;">
       <h4 id="pressInTitle">Подающий трубопровод (P1)</h4>
       <div class="row">
-        <div><label>Тип</label><input type="text" id="pressInType" placeholder="СДВ-И"></div>
+        <div>
+          <label>Тип</label>
+          <input type="text" id="pressInType" placeholder="Выберите или введите..." readonly onclick="openPicker('pressures', 'pressInType')">
+        </div>
         <div><label>Зав. №</label><input type="text" id="pressInSn" placeholder="245310"></div>
       </div>
       <div class="row">
@@ -332,7 +416,10 @@
         <hr class="section-divider">
         <h4 id="pressOutTitle">Циркуляционный трубопровод (P2)</h4>
         <div class="row">
-          <div><label>Тип</label><input type="text" id="pressOutType" placeholder="СДВ-И"></div>
+          <div>
+            <label>Тип</label>
+            <input type="text" id="pressOutType" placeholder="Выберите или введите..." readonly onclick="openPicker('pressures', 'pressOutType')">
+          </div>
           <div><label>Зав. №</label><input type="text" id="pressOutSn" placeholder="245366"></div>
         </div>
         <div class="row">
@@ -354,7 +441,10 @@
       <div id="makeUpBlock" class="hidden" style="margin-top: 10px;">
         <h4>Расходомер подпитки</h4>
         <div class="row">
-          <div><label>Тип ПР подпитки</label><input type="text" id="makeUpType" placeholder="ВЭПС"></div>
+          <div>
+            <label>Тип ПР подпитки</label>
+            <input type="text" id="makeUpType" placeholder="Выберите..." readonly onclick="openPicker('flowmeters', 'makeUpType')">
+          </div>
           <div><label>Зав. №</label><input type="text" id="makeUpSn"></div>
         </div>
         <div class="row">
@@ -369,7 +459,10 @@
         </div>
         <div id="makeUpPressBlock" class="hidden" style="margin-top: 6px;">
           <div class="row">
-            <div><label>Тип прибора</label><input type="text" id="makeUpPressType" placeholder="СДВ-И"></div>
+            <div>
+              <label>Тип прибора</label>
+              <input type="text" id="makeUpPressType" placeholder="Выберите..." readonly onclick="openPicker('pressures', 'makeUpPressType')">
+            </div>
             <div><label>Зав. №</label><input type="text" id="makeUpPressSn"></div>
           </div>
           <div class="row">
@@ -385,7 +478,10 @@
         </div>
         <div id="makeUpTempBlock" class="hidden" style="margin-top: 6px;">
           <div class="row">
-            <div><label>Тип прибора</label><input type="text" id="makeUpTempType" placeholder="КТПТР"></div>
+            <div>
+              <label>Тип прибора</label>
+              <input type="text" id="makeUpTempType" placeholder="Выберите..." readonly onclick="openPicker('temperatures', 'makeUpTempType')">
+            </div>
             <div><label>Зав. №</label><input type="text" id="makeUpTempSn"></div>
           </div>
           <div class="row">
@@ -425,6 +521,17 @@
   <button type="button" class="btn-submit" onclick="sendData()">Сформировать и отправить акт</button>
 </form>
 
+<!-- МОДАЛЬНОЕ ОКНО ВЫБОРА БРЕНДА И МОДЕЛИ -->
+<div class="modal-overlay" id="pickerModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Выберите бренд</span>
+      <button type="button" class="modal-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="modal-list" id="modalList"></div>
+  </div>
+</div>
+
 <script>
   const tg = window.Telegram.WebApp;
   tg.expand();
@@ -435,6 +542,113 @@
 
   toggleResourceType();
   toggleUntilDate();
+
+  // ДЕРЕВО ОБОРУДОВАНИЯ (БРЕНДЫ И МОДЕЛИ)
+  const equipmentData = {
+    calculators: {
+      "Логика": ["СПТ-944", "СПТ-941.2", "СПТ-941", "СПТ-943", "СПТ-961", "СПТ-962"],
+      "Взлет": ["ТСРВ-024", "ТСРВ-024M", "ТСРВ-042", "ТСРВ-026M", "ТСРВ-034"],
+      "Теплоком / Промприбор": ["ВКТ-7", "ВКТ-9"],
+      "Термотроник": ["ТВ7"],
+      "Карат": ["Карат-307", "Карат-104"],
+      "Измеритель / Промприбор": ["МКТS", "ЭЛТЕКО"]
+    },
+    flowmeters: {
+      "Промприбор": ["ВЭПС-Р-ПБ2-01", "ВЭПС", "ВПС"],
+      "Теплоком": ["ПРЭM"],
+      "МастерФлоу": ["МФ", "МФ-5.2.1"],
+      "Взлет": ["ЭРСВ-420L", "ЭРСВ-430L", "ЭРСВ-520L"],
+      "Питерфлоу": ["Питерфлоу RS", "Питерфлоу K"],
+      "ТСР": ["УРЖ-2К", "РУС-1"]
+    },
+    temperatures: {
+      "КТПТР": ["КТПТР-01", "КТПТР-06", "КТПТР-08", "КТПТР-03"],
+      "КТСПР": ["КТСПР-001", "КТСПР-01"],
+      "Взлет": ["КСПТ"],
+      "ТСП": ["ТСП-1088", "ТСП-N"]
+    },
+    pressures: {
+      "СДВ": ["СДВ-И"],
+      "Овен": ["ПД100", "ПД100И"],
+      "МИДА": ["MIDA-13P", "МИДА-DI"],
+      "Корунд": ["Корунд-ДИ"],
+      "Взлет": ["ПД-1"]
+    }
+  };
+
+  let activeTargetInputId = null;
+  let currentCategory = null;
+
+  function openPicker(category, inputId) {
+    activeTargetInputId = inputId;
+    currentCategory = category;
+    
+    document.getElementById('modalTitle').innerText = "Шаг 1: Выберите производителя";
+    const listContainer = document.getElementById('modalList');
+    listContainer.innerHTML = "";
+
+    // Опция ручного ввода
+    const manualItem = document.createElement('div');
+    manualItem.className = 'modal-item';
+    manualItem.style.color = 'var(--accent-color)';
+    manualItem.innerText = "✍️ Ввести название вручную";
+    manualItem.onclick = function() {
+      closePicker();
+      const input = document.getElementById(activeTargetInputId);
+      input.removeAttribute('readonly');
+      input.focus();
+    };
+    listContainer.appendChild(manualItem);
+
+    // Список брендов
+    const brands = Object.keys(equipmentData[category]);
+    brands.forEach(brand => {
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.innerHTML = `<span>${brand}</span> <span>›</span>`;
+      item.onclick = function() {
+        showModels(category, brand);
+      };
+      listContainer.appendChild(item);
+    });
+
+    document.getElementById('pickerModal').classList.add('active');
+  }
+
+  function showModels(category, brand) {
+    document.getElementById('modalTitle').innerText = `Шаг 2: Модели ${brand}`;
+    const listContainer = document.getElementById('modalList');
+    listContainer.innerHTML = "";
+
+    // Кнопка возврата к брендам
+    const backItem = document.createElement('div');
+    backItem.className = 'modal-item';
+    backItem.style.color = 'var(--hint-color)';
+    backItem.innerText = "← Назад к брендам";
+    backItem.onclick = function() {
+      openPicker(category, activeTargetInputId);
+    };
+    listContainer.appendChild(backItem);
+
+    // Список моделей
+    const models = equipmentData[category][brand];
+    models.forEach(model => {
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.innerText = model;
+      item.onclick = function() {
+        const input = document.getElementById(activeTargetInputId);
+        input.value = model;
+        input.setAttribute('readonly', 'readonly');
+        closePicker();
+      };
+      listContainer.appendChild(item);
+    });
+  }
+
+  function closePicker() {
+    document.getElementById('pickerModal').classList.remove('active');
+  }
 
   // Преобразование дат к виду "27.07.2026 г."
   function formatDate(rawDate) {
