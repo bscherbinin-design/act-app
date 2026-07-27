@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <!-- Запрещаем автозум и масштабирование -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Акт проверки узла учета</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -14,7 +13,6 @@
     h4 { margin: 10px 0 6px 0; color: #4b4f56; font-size: 13px; text-decoration: underline; }
     label { font-size: 12px; font-weight: 600; color: #606770; display: block; margin-top: 8px; margin-bottom: 3px; }
     
-    /* font-size: 16px критичен для мобильных браузеров против скачков */
     input, select { 
       width: 100%; 
       padding: 10px; 
@@ -457,6 +455,32 @@
 
     tg.sendData(JSON.stringify(formData));
   }
+
+  // --- ЛОГИКА АВТОМАТИЧЕСКОГО ЗАКРЫТИЯ КЛАВИАТУРЫ ---
+
+  // 1. Скрытие при движении/скролле страницы
+  window.addEventListener('touchmove', function() {
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+      document.activeElement.blur();
+    }
+  });
+
+  // 2. Скрытие при клике вне полей ввода
+  document.addEventListener('click', function(event) {
+    const isInput = event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'BUTTON';
+    if (!isInput && document.activeElement) {
+      document.activeElement.blur();
+    }
+  });
+
+  // 3. Скрытие при нажатии Enter / «Готово» на виртуальной клавиатуре
+  document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        this.blur();
+      }
+    });
+  });
 </script>
 </body>
 </html>
