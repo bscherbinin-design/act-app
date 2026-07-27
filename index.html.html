@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Акт проверки узла учета</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f9; padding: 12px; margin: 0; color: #333; }
+    .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+    h3 { margin-top: 0; color: #0088cc; font-size: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+    label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-top: 10px; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #fff; }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    .hidden { display: none; }
+    button.submit-btn { width: 100%; background: #24a1de; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    button.submit-btn:active { background: #1d82b3; }
+  </style>
+</head>
+<body>
+
+<form id="actForm">
+  <!-- Блок 1: Общие данные -->
+  <div class="card">
+    <h3>1. Общая информация</h3>
+    <div class="row">
+      <div>
+        <label>Дата проверки</label>
+        <input type="date" id="checkDate" required>
+      </div>
+      <div>
+        <label>Время</label>
+        <input type="time" id="checkTime" required>
+      </div>
+    </div>
+    
+    <label>Номер акта</label>
+    <input type="text" id="actNum" placeholder="НО 39116" required>
+
+    <label>Тип ресурса</label>
+    <select id="resourceType" onchange="toggleFields()">
+      <option value="Тепловая энергия">Тепловая энергия</option>
+      <option value="ГВС">ГВС</option>
+      <option value="ХВС">ХВС</option>
+    </select>
+
+    <label>Потребитель / Объект</label>
+    <input type="text" id="consumer" placeholder="ООО 'Комфортный город'...">
+
+    <label>Адрес объекта</label>
+    <input type="text" id="address" placeholder="г. Ноябрьск, пр-кт Мира, д. 36" required>
+  </div>
+
+  <!-- Блок 2: Вычислитель -->
+  <div class="card" id="calculatorBlock">
+    <h3>2. Тепловычислитель</h3>
+    <div class="row">
+      <div>
+        <label>Модель</label>
+        <input type="text" id="calcModel" placeholder="Взлет ТСРВ-024М">
+      </div>
+      <div>
+        <label>Заводской №</label>
+        <input type="text" id="calcSn">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Показания Q (Гкал)</label>
+        <input type="number" step="0.001" id="calcQ">
+      </div>
+      <div>
+        <label>T раб. (ч)</label>
+        <input type="number" id="calcTrab">
+      </div>
+    </div>
+  </div>
+
+  <!-- Блок 3: Расходомеры -->
+  <div class="card">
+    <h3>3. Расходомеры</h3>
+    <label>Модель ПР (Подача)</label>
+    <input type="text" id="flowModelIn" placeholder="Взлет ЭРСВ-440ЛВ">
+    <div class="row">
+      <div>
+        <label>Зав. № (Подача)</label>
+        <input type="text" id="flowSnIn">
+      </div>
+      <div>
+        <label>Показания м³</label>
+        <input type="number" step="0.01" id="flowValIn">
+      </div>
+    </div>
+
+    <!-- Обратный трубопровод (скрывается для ХВС) -->
+    <div id="returnFlowGroup">
+      <hr style="border:0; border-top: 1px dashed #ccc; margin: 15px 0;">
+      <label>Модель ПР (Обратка)</label>
+      <input type="text" id="flowModelOut" placeholder="Взлет ЭРСВ-440ЛВ">
+      <div class="row">
+        <div>
+          <label>Зав. № (Обратка)</label>
+          <input type="text" id="flowSnOut">
+        </div>
+        <div>
+          <label>Показания м³</label>
+          <input type="number" step="0.01" id="flowValOut">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Блок 4: Заключение -->
+  <div class="card">
+    <h3>4. Заключение</h3>
+    <label>Пригодность узла учета</label>
+    <select id="status">
+      <option value="пригоден">Пригоден</option>
+      <option value="непригоден">Непригоден</option>
+    </select>
+    
+    <label>Инженер ФИО</label>
+    <input type="text" id="inspector" placeholder="Щербинин Б.С." required>
+  </div>
+
+  <button type="button" class="submit-btn" onclick="sendData()">Сформировать и отправить акт</button>
+</form>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand(); // Разворачиваем окно на весь экран
+
+  // Автоподстановка текущей даты и времени
+  document.getElementById('checkDate').valueAsDate = new Date();
+  const now = new Date();
+  document.getElementById('checkTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  // Функция скрытия полей для ХВС
+  function toggleFields() {
+    const res = document.getElementById('resourceType').value;
+    const returnFlow = document.getElementById('returnFlowGroup');
+    if (res === 'ХВС') {
+      returnFlow.classList.add('hidden');
+    } else {
+      returnFlow.classList.remove('hidden');
+    }
+  }
+
+  // Сбор данных и отправка боту
+  function sendData() {
+    const formData = {
+      checkDate: document.getElementById('checkDate').value,
+      checkTime: document.getElementById('checkTime').value,
+      actNum: document.getElementById('actNum').value,
+      resourceType: document.getElementById('resourceType').value,
+      consumer: document.getElementById('consumer').value,
+      address: document.getElementById('address').value,
+      calcModel: document.getElementById('calcModel').value,
+      calcSn: document.getElementById('calcSn').value,
+      calcQ: document.getElementById('calcQ').value,
+      calcTrab: document.getElementById('calcTrab').value,
+      flowModelIn: document.getElementById('flowModelIn').value,
+      flowSnIn: document.getElementById('flowSnIn').value,
+      flowValIn: document.getElementById('flowValIn').value,
+      flowModelOut: document.getElementById('flowModelOut').value,
+      flowSnOut: document.getElementById('flowSnOut').value,
+      flowValOut: document.getElementById('flowValOut').value,
+      status: document.getElementById('status').value,
+      inspector: document.getElementById('inspector').value
+    };
+
+    // Отправляем JSON обратно в бота
+    tg.sendData(JSON.stringify(formData));
+  }
+</script>
+</body>
+</html>
