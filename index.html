@@ -77,11 +77,6 @@
       outline: none; 
     }
 
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator {
-      filter: var(--tg-color-scheme, light) == 'dark' ? invert(1) : none;
-    }
-    
     .row { display: flex; gap: 8px; }
     .row > div { flex: 1; }
     .hidden { display: none !important; }
@@ -158,7 +153,6 @@
     <div class="row">
       <div><label>№ Договора</label><input type="text" id="docNum" placeholder="НФ00ТВ0000011047"></div>
       <div>
-        <!-- ПРАВКА 1: Выпадающий список для основания -->
         <label>Основание</label>
         <select id="reason">
           <option value="По заявлению абонента" selected>По заявлению абонента</option>
@@ -169,7 +163,34 @@
     </div>
     
     <label>Адрес объекта</label>
-    <input type="text" id="address" placeholder="г. Ноябрьск, ул. Ленина, д. 17А" required>
+    <!-- Поле адреса с подключенным списком подсказок -->
+    <input type="text" id="address" list="streetList" value="г. Ноябрьск, ул. " placeholder="г. Ноябрьск, ул. Новоселов, д. 4" required>
+    
+    <!-- Выпадающий список с автодополнением по г. Ноябрьск -->
+    <datalist id="streetList">
+      <option value="г. Ноябрьск, ул. Новоселов, д. ">
+      <option value="г. Ноябрьск, ул. Ленина, д. ">
+      <option value="г. Ноябрьск, ул. Советская, д. ">
+      <option value="г. Ноябрьск, ул. 60 лет СССР, д. ">
+      <option value="г. Ноябрьск, ул. Мира, д. ">
+      <option value="г. Ноябрьск, ул. Республиканская, д. ">
+      <option value="г. Ноябрьск, ул. Космонавтов, д. ">
+      <option value="г. Ноябрьск, ул. Дзержинского, д. ">
+      <option value="г. Ноябрьск, ул. Изыскателей, д. ">
+      <option value="г. Ноябрьск, ул. Шевченко, д. ">
+      <option value="г. Ноябрьск, ул. Цоя, д. ">
+      <option value="г. Ноябрьск, ул. Энтузиастов, д. ">
+      <option value="г. Ноябрьск, ул. Магистральная, д. ">
+      <option value="г. Ноябрьск, ул. Высоцкого, д. ">
+      <option value="г. Ноябрьск, проспект Мира, д. ">
+      <option value="г. Ноябрьск, ул. Муравленко, д. ">
+      <option value="г. Ноябрьск, ул. Пионерская, д. ">
+      <option value="г. Ноябрьск, ул. Республики, д. ">
+      <option value="г. Ноябрьск, ул. Строителей, д. ">
+      <option value="г. Ноябрьск, ул. Транспортная, д. ">
+      <option value="г. Ноябрьск, ул. Школьная, д. ">
+      <option value="г. Ноябрьск, промзона, панель ">
+    </datalist>
 
     <label>Представитель потребителя (ФИО, должн., тел.)</label>
     <input type="text" id="consumerRep">
@@ -279,7 +300,6 @@
       <div><label>Схема потребления</label><input type="text" id="schemeFormula" placeholder="СП-03"></div>
     </div>
     
-    <!-- ПРАВКА 2: Упрощенные поля веса импульса -->
     <h4>Вес импульса в тепловычислителе (м³/имп)</h4>
     <div class="row">
       <div><label>Подающий трубопровод</label><input type="text" id="impCalcIn" placeholder="0.001"></div>
@@ -388,7 +408,6 @@
       <option value="непригодным">Непригодным</option>
     </select>
 
-    <!-- ПРАВКА 3: Опциональный срок действия -->
     <label>Срок действия пригодности (до):</label>
     <input type="date" id="statusUntilDate" class="hidden">
     <div class="toggle-group" style="margin-top: 4px;">
@@ -396,7 +415,6 @@
       <input type="checkbox" id="untilMpi" checked onchange="toggleUntilDate()">
     </div>
 
-    <!-- ПРАВКА 4: Дефолтное значение для представителя РСО -->
     <label style="margin-top: 12px;">Представитель РСО (Инспектор)</label>
     <div class="row">
       <div><input type="text" id="inspectorPost" value="Инженер ТКиИ"></div>
@@ -417,6 +435,17 @@
 
   toggleResourceType();
   toggleUntilDate();
+
+  // Преобразование дат к виду "27.07.2026 г."
+  function formatDate(rawDate) {
+    if (!rawDate) return '';
+    const parts = rawDate.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}.${month}.${year} г.`;
+    }
+    return rawDate;
+  }
 
   function toggleUntilDate() {
     const isMpi = document.getElementById('untilMpi').checked;
@@ -487,10 +516,11 @@
 
   function sendData() {
     const isMpi = document.getElementById('untilMpi').checked;
-    const untilDateValue = isMpi ? "до окончания срока МПИ" : document.getElementById('statusUntilDate').value;
+    const rawStatusUntilDate = document.getElementById('statusUntilDate').value;
+    const untilDateValue = isMpi ? "до окончания срока МПИ" : formatDate(rawStatusUntilDate);
 
     const formData = {
-      actDate: document.getElementById('actDate').value,
+      actDate: formatDate(document.getElementById('actDate').value),
       actTime: document.getElementById('actTime').value,
       actNum: document.getElementById('actNum').value,
       resourceType: document.getElementById('resourceType').value,
@@ -506,7 +536,7 @@
       calcTrab: document.getElementById('calcTrab').value,
       calcTnesht: document.getElementById('calcTnesht').value,
       calcQavg: document.getElementById('calcQavg').value,
-      calcPov: document.getElementById('calcPov').value,
+      calcPov: formatDate(document.getElementById('calcPov').value),
       calcSeal: document.getElementById('calcSeal').value,
 
       prInType: document.getElementById('prInType').value,
@@ -514,7 +544,7 @@
       prInSn: document.getElementById('prInSn').value,
       prInVal: document.getElementById('prInVal').value,
       prInAvg: document.getElementById('prInAvg').value,
-      prInPov: document.getElementById('prInPov').value,
+      prInPov: formatDate(document.getElementById('prInPov').value),
       prInSeal: document.getElementById('prInSeal').value,
 
       hasPrOut: document.getElementById('hasPrOut').checked,
@@ -523,7 +553,7 @@
       prOutSn: document.getElementById('prOutSn').value,
       prOutVal: document.getElementById('prOutVal').value,
       prOutAvg: document.getElementById('prOutAvg').value,
-      prOutPov: document.getElementById('prOutPov').value,
+      prOutPov: formatDate(document.getElementById('prOutPov').value),
       prOutSeal: document.getElementById('prOutSeal').value,
 
       hasTemp: document.getElementById('hasTemp').checked,
@@ -534,7 +564,7 @@
       ktpOutT: document.getElementById('ktpOutT').value,
       ktpInTavg: document.getElementById('ktpInTavg').value,
       ktpOutTavg: document.getElementById('ktpOutTavg').value,
-      ktpPov: document.getElementById('ktpPov').value,
+      ktpPov: formatDate(document.getElementById('ktpPov').value),
       ktpInSeal: document.getElementById('ktpInSeal').value,
       ktpOutSeal: document.getElementById('ktpOutSeal').value,
 
@@ -545,20 +575,20 @@
       hasPressure: document.getElementById('hasPressure').checked,
       pressInType: document.getElementById('pressInType').value,
       pressInSn: document.getElementById('pressInSn').value,
-      pressInPov: document.getElementById('pressInPov').value,
+      pressInPov: formatDate(document.getElementById('pressInPov').value),
       pressInVal: document.getElementById('pressInVal').value,
       pressInSeal: document.getElementById('pressInSeal').value,
 
       pressOutType: document.getElementById('pressOutType').value,
       pressOutSn: document.getElementById('pressOutSn').value,
-      pressOutPov: document.getElementById('pressOutPov').value,
+      pressOutPov: formatDate(document.getElementById('pressOutPov').value),
       pressOutVal: document.getElementById('pressOutVal').value,
       pressOutSeal: document.getElementById('pressOutSeal').value,
 
       hasMakeUp: document.getElementById('hasMakeUp').checked,
       makeUpType: document.getElementById('makeUpType').value,
       makeUpSn: document.getElementById('makeUpSn').value,
-      makeUpPov: document.getElementById('makeUpPov').value,
+      makeUpPov: formatDate(document.getElementById('makeUpPov').value),
       makeUpVal: document.getElementById('makeUpVal').value,
       makeUpSeal: document.getElementById('makeUpSeal').value,
 
@@ -566,14 +596,14 @@
       makeUpPressType: document.getElementById('makeUpPressType').value,
       makeUpPressSn: document.getElementById('makeUpPressSn').value,
       makeUpPressVal: document.getElementById('makeUpPressVal').value,
-      makeUpPressPov: document.getElementById('makeUpPressPov').value,
+      makeUpPressPov: formatDate(document.getElementById('makeUpPressPov').value),
       makeUpPressSeal: document.getElementById('makeUpPressSeal').value,
 
       hasMakeUpTemp: document.getElementById('hasMakeUpTemp').checked,
       makeUpTempType: document.getElementById('makeUpTempType').value,
       makeUpTempSn: document.getElementById('makeUpTempSn').value,
       makeUpTempVal: document.getElementById('makeUpTempVal').value,
-      makeUpTempPov: document.getElementById('makeUpTempPov').value,
+      makeUpTempPov: formatDate(document.getElementById('makeUpTempPov').value),
       makeUpTempSeal: document.getElementById('makeUpTempSeal').value,
 
       status: document.getElementById('status').value,
@@ -585,7 +615,7 @@
     tg.sendData(JSON.stringify(formData));
   }
 
-  // Скрытие клавиатуры
+  // Скрытие клавиатуры при прокрутке и клике вне полей
   window.addEventListener('touchmove', function() {
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
       document.activeElement.blur();
