@@ -92,7 +92,7 @@
     <h4>Подающий трубопровод</h4>
     <div class="row">
       <div><label>Тип прибора</label><input type="text" id="prInType" placeholder="ВЭПС-Р-ПБ2-01"></div>
-      <div><label>Ду (Ø)</label><input type="number" id="prInDu" placeholder="25"></div>
+      <div><label>Ду (мм)</label><input type="number" id="prInDu" placeholder="25"></div>
       <div><label>Заводской №</label><input type="text" id="prInSn" placeholder="7255629"></div>
     </div>
     <div class="row">
@@ -116,7 +116,7 @@
       <h4 id="prOutTitle">Обратный трубопровод</h4>
       <div class="row">
         <div><label>Тип прибора</label><input type="text" id="prOutType" placeholder="ВЭПС-Р-ПБ2-01"></div>
-        <div><label>Ду (Ø)</label><input type="number" id="prOutDu" placeholder="25"></div>
+        <div><label>Ду (мм)</label><input type="number" id="prOutDu" placeholder="25"></div>
         <div><label>Заводской №</label><input type="text" id="prOutSn" placeholder="7255544"></div>
       </div>
       <div class="row">
@@ -130,7 +130,7 @@
     </div>
   </div>
 
-  <!-- 4. ТЕРМОПРЕОБРАЗОВАТЕЛИ (Обязательны для ТЭ и ГВС) -->
+  <!-- 4. ТЕРМОПРЕОБРАЗОВАТЕЛИ -->
   <div class="card" id="tempSection">
     <h3>4. Комплект термопреобразователей</h3>
     <div class="row">
@@ -167,19 +167,19 @@
     <input type="text" id="impPr" placeholder="по под. 0.001 / по обр. 0.001">
   </div>
 
-  <!-- 6. ВАРИАТИВНОЕ ОБОРУДОВАНИЕ (ОПЦИИ) -->
+  <!-- 6. ВАРИАТИВНОЕ ОБОРУДОВАНИЕ -->
   <div class="card">
     <h3>6. Дополнительное оборудование</h3>
     
     <!-- ТУМБЛЕР ДАТЧИКОВ ДАВЛЕНИЯ -->
     <div class="toggle-group">
-      <label for="hasPressure">Датчики давления (Подача/Обратка)</label>
+      <label for="hasPressure">Датчики давления (Подача / Обратка)</label>
       <input type="checkbox" id="hasPressure" checked onchange="togglePressure()">
     </div>
 
     <!-- Блок датчиков давления -->
     <div id="pressBlock" style="margin-top: 10px;">
-      <h4>Подающий трубопровод ($P_1$)</h4>
+      <h4>Подающий трубопровод (P1)</h4>
       <div class="row">
         <div><label>Тип</label><input type="text" id="pressInType" placeholder="СДВ-И"></div>
         <div><label>Зав. №</label><input type="text" id="pressInSn" placeholder="245310"></div>
@@ -192,7 +192,7 @@
 
       <div id="pressOutGroup">
         <hr class="section-divider">
-        <h4>Обратный трубопровод ($P_2$)</h4>
+        <h4>Обратный трубопровод (P2)</h4>
         <div class="row">
           <div><label>Тип</label><input type="text" id="pressOutType" placeholder="СДВ-И"></div>
           <div><label>Зав. №</label><input type="text" id="pressOutSn" placeholder="245366"></div>
@@ -215,8 +215,9 @@
 
     <!-- Блок подпитки -->
     <div id="makeUpBlock" class="hidden" style="margin-top: 10px;">
+      <h4>Расходомер подпитки</h4>
       <div class="row">
-        <div><label>Тип ПР подпитки</label><input type="text" id="makeUpType"></div>
+        <div><label>Тип ПР подпитки</label><input type="text" id="makeUpType" placeholder="ВЭПС"></div>
         <div><label>Зав. №</label><input type="text" id="makeUpSn"></div>
       </div>
       <div class="row">
@@ -225,20 +226,39 @@
         <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
       </div>
 
-      <!-- Редкие опции на подпитке -->
+      <!-- Разделенные тумблеры для давления и температуры на подпитке -->
       <div class="toggle-group" style="margin-top: 8px; background: #fff;">
-        <label for="hasMakeUpSensors" style="font-size: 11px;">+ Датчик давления / Термопреобразователь на подпитке</label>
-        <input type="checkbox" id="hasMakeUpSensors" onchange="toggleMakeUpSensors()">
+        <label for="hasMakeUpPress" style="font-size: 12px;">+ Датчик давления на подпитке (Pподп)</label>
+        <input type="checkbox" id="hasMakeUpPress" onchange="toggleMakeUpSensors()">
+      </div>
+      <div id="makeUpPressBlock" class="hidden" style="margin-top: 6px;">
+        <div class="row">
+          <div><label>Тип прибора</label><input type="text" id="makeUpPressType" placeholder="СДВ-И"></div>
+          <div><label>Зав. №</label><input type="text" id="makeUpPressSn"></div>
+        </div>
+        <div class="row">
+          <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="makeUpPressVal" placeholder="4.0"></div>
+          <div><label>Поверка</label><input type="date" id="makeUpPressPov"></div>
+          <div><label>Пломба</label><input type="text" id="makeUpPressSeal"></div>
+        </div>
       </div>
 
-      <div id="makeUpSensorsBlock" class="hidden" style="margin-top: 8px;">
+      <div class="toggle-group" style="margin-top: 8px; background: #fff;">
+        <label for="hasMakeUpTemp" style="font-size: 12px;">+ Термопреобразователь на подпитке (Tподп)</label>
+        <input type="checkbox" id="hasMakeUpTemp" onchange="toggleMakeUpSensors()">
+      </div>
+      <div id="makeUpTempBlock" class="hidden" style="margin-top: 6px;">
         <div class="row">
-          <div><label>Датчик $P_{подп}$ (Тип / Зав.№ / P)</label><input type="text" id="makeUpPress" placeholder="СДВ-И / №123 / 4.0 кгс"></div>
+          <div><label>Тип прибора</label><input type="text" id="makeUpTempType" placeholder="КТПТР"></div>
+          <div><label>Зав. №</label><input type="text" id="makeUpTempSn"></div>
         </div>
         <div class="row">
-          <div><label>Термометр $T_{подп}$ (Тип / Зав.№ / T)</label><input type="text" id="makeUpTemp" placeholder="КТПТР / №456 / 15°C"></div>
+          <div><label>Замер T (°C)</label><input type="number" step="0.1" id="makeUpTempVal" placeholder="15"></div>
+          <div><label>Поверка</label><input type="date" id="makeUpTempPov"></div>
+          <div><label>Пломба</label><input type="text" id="makeUpTempSeal"></div>
         </div>
       </div>
+
     </div>
 
   </div>
@@ -282,7 +302,6 @@
     document.getElementById('tempSection').classList.toggle('hidden', isHvs);
     document.getElementById('schemeSection').classList.toggle('hidden', isHvs);
 
-    // Управление тумблером второго ПР
     document.getElementById('prOutToggleGroup').classList.toggle('hidden', isHvs);
     if (isHvs) {
       document.getElementById('hasPrOut').checked = false;
@@ -310,8 +329,11 @@
   }
 
   function toggleMakeUpSensors() {
-    const checked = document.getElementById('hasMakeUpSensors').checked;
-    document.getElementById('makeUpSensorsBlock').classList.toggle('hidden', !checked);
+    const hasPress = document.getElementById('hasMakeUpPress').checked;
+    const hasTemp = document.getElementById('hasMakeUpTemp').checked;
+    
+    document.getElementById('makeUpPressBlock').classList.toggle('hidden', !hasPress);
+    document.getElementById('makeUpTempBlock').classList.toggle('hidden', !hasTemp);
   }
 
   function sendData() {
@@ -387,9 +409,19 @@
       makeUpVal: document.getElementById('makeUpVal').value,
       makeUpSeal: document.getElementById('makeUpSeal').value,
 
-      hasMakeUpSensors: document.getElementById('hasMakeUpSensors').checked,
-      makeUpPress: document.getElementById('makeUpPress').value,
-      makeUpTemp: document.getElementById('makeUpTemp').value,
+      hasMakeUpPress: document.getElementById('hasMakeUpPress').checked,
+      makeUpPressType: document.getElementById('makeUpPressType').value,
+      makeUpPressSn: document.getElementById('makeUpPressSn').value,
+      makeUpPressVal: document.getElementById('makeUpPressVal').value,
+      makeUpPressPov: document.getElementById('makeUpPressPov').value,
+      makeUpPressSeal: document.getElementById('makeUpPressSeal').value,
+
+      hasMakeUpTemp: document.getElementById('hasMakeUpTemp').checked,
+      makeUpTempType: document.getElementById('makeUpTempType').value,
+      makeUpTempSn: document.getElementById('makeUpTempSn').value,
+      makeUpTempVal: document.getElementById('makeUpTempVal').value,
+      makeUpTempPov: document.getElementById('makeUpTempPov').value,
+      makeUpTempSeal: document.getElementById('makeUpTempSeal').value,
 
       status: document.getElementById('status').value,
       statusUntilDate: document.getElementById('statusUntilDate').value,
