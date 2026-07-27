@@ -6,35 +6,133 @@
   <title>Акт проверки узла учета</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* Переменные темы Telegram с фоллбэками для светлой темы */
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #f0f2f5);
+      --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+      --text-color: var(--tg-theme-text-color, #1c1e21);
+      --hint-color: var(--tg-theme-hint-color, #606770);
+      --accent-color: var(--tg-theme-button-color, #24a1de);
+      --button-text: var(--tg-theme-button-text-color, #ffffff);
+      --input-bg: var(--tg-theme-bg-color, #ffffff);
+      --border-color: rgba(120, 120, 120, 0.25);
+    }
+
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; padding: 12px; margin: 0; color: #1c1e21; }
-    .card { background: #fff; padding: 14px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 12px; }
-    h3 { margin-top: 0; color: #0088cc; font-size: 15px; border-bottom: 2px solid #e4e6eb; padding-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    h4 { margin: 10px 0 6px 0; color: #4b4f56; font-size: 13px; text-decoration: underline; }
-    label { font-size: 12px; font-weight: 600; color: #606770; display: block; margin-top: 8px; margin-bottom: 3px; }
     
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: var(--bg-color); 
+      padding: 12px; 
+      margin: 0; 
+      color: var(--text-color); 
+    }
+
+    .card { 
+      background: var(--card-bg); 
+      padding: 14px; 
+      border-radius: 12px; 
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15); 
+      margin-bottom: 12px; 
+    }
+
+    h3 { 
+      margin-top: 0; 
+      color: var(--accent-color); 
+      font-size: 15px; 
+      border-bottom: 2px solid var(--border-color); 
+      padding-bottom: 6px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px; 
+    }
+
+    h4 { 
+      margin: 10px 0 6px 0; 
+      color: var(--hint-color); 
+      font-size: 13px; 
+      text-decoration: underline; 
+    }
+
+    label { 
+      font-size: 12px; 
+      font-weight: 600; 
+      color: var(--hint-color); 
+      display: block; 
+      margin-top: 8px; 
+      margin-bottom: 3px; 
+    }
+    
+    /* Инпуты адаптивные к теме */
     input, select { 
       width: 100%; 
       padding: 10px; 
-      border: 1px solid #ccd0d5; 
+      border: 1px solid var(--border-color); 
       border-radius: 8px; 
       font-size: 16px; 
-      background: #fff; 
+      background: var(--input-bg); 
+      color: var(--text-color);
       -webkit-text-size-adjust: 100%;
     }
-    input:focus, select:focus { border-color: #0088cc; outline: none; }
+
+    input:focus, select:focus { 
+      border-color: var(--accent-color); 
+      outline: none; 
+    }
+
+    /* Адаптация системных иконок календаря и часов под тёмный режим */
+    [scheme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+    [scheme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: var(--tg-color-scheme, light) == 'dark' ? invert(1) : none;
+    }
     
     .row { display: flex; gap: 8px; }
     .row > div { flex: 1; }
     .hidden { display: none !important; }
     
-    .toggle-group { display: flex; align-items: center; justify-content: space-between; background: #f7f8fa; padding: 10px 12px; border-radius: 8px; margin-top: 8px; border: 1px solid #e4e6eb; }
-    .toggle-group label { margin: 0; font-size: 13px; cursor: pointer; color: #1c1e21; font-weight: 500; }
-    .toggle-group input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; transform: scale(1.3); }
+    .toggle-group { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      background: var(--bg-color); 
+      padding: 10px 12px; 
+      border-radius: 8px; 
+      margin-top: 8px; 
+      border: 1px solid var(--border-color); 
+    }
 
-    .btn-submit { width: 100%; background: #24a1de; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(36,161,222,0.3); }
-    .btn-submit:active { background: #1d82b3; }
-    .section-divider { border: 0; border-top: 1px dashed #ccc; margin: 12px 0; }
+    .toggle-group label { 
+      margin: 0; 
+      font-size: 13px; 
+      cursor: pointer; 
+      color: var(--text-color); 
+      font-weight: 500; 
+    }
+
+    .toggle-group input[type="checkbox"] { 
+      width: auto; 
+      margin: 0; 
+      cursor: pointer; 
+      transform: scale(1.3); 
+    }
+
+    .btn-submit { 
+      width: 100%; 
+      background: var(--accent-color); 
+      color: var(--button-text); 
+      border: none; 
+      padding: 14px; 
+      border-radius: 10px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      margin-top: 15px; 
+      cursor: pointer; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
+    }
+
+    .btn-submit:active { opacity: 0.85; }
+    .section-divider { border: 0; border-top: 1px dashed var(--border-color); margin: 12px 0; }
   </style>
 </head>
 <body>
@@ -99,7 +197,6 @@
   <div class="card">
     <h3>3. Расходомеры (ПР)</h3>
     
-    <!-- Подающий ПР (Обязательный) -->
     <h4>Подающий трубопровод</h4>
     <div class="row">
       <div><label>Тип прибора</label><input type="text" id="prInType" placeholder="ВЭПС-Р-ПБ2-01"></div>
@@ -115,13 +212,11 @@
       <div><label>№ пломбы РСО</label><input type="text" id="prInSeal" placeholder="0044666"></div>
     </div>
 
-    <!-- ТУМБЛЕР ДЛЯ ВТОРОГО РАСХОДОМЕРА -->
     <div id="prOutToggleGroup" class="toggle-group">
       <label for="hasPrOut" id="lblHasPrOut">Есть второй расходомер (Обратка/Циркуляция)</label>
       <input type="checkbox" id="hasPrOut" checked onchange="togglePrOut()">
     </div>
 
-    <!-- Второй расходомер -->
     <div id="prOutBlock">
       <hr class="section-divider">
       <h4 id="prOutTitle">Обратный трубопровод</h4>
@@ -190,13 +285,11 @@
   <div class="card">
     <h3>6. Дополнительное оборудование</h3>
     
-    <!-- ТУМБЛЕР ДАТЧИКОВ ДАВЛЕНИЯ -->
     <div class="toggle-group">
       <label for="hasPressure">Датчики давления (Подача / Обратка)</label>
       <input type="checkbox" id="hasPressure" checked onchange="togglePressure()">
     </div>
 
-    <!-- Блок датчиков давления -->
     <div id="pressBlock" style="margin-top: 10px;">
       <h4>Подающий трубопровод (P1)</h4>
       <div class="row">
@@ -226,13 +319,11 @@
 
     <hr class="section-divider">
 
-    <!-- ТУМБЛЕР ПОДПИТКИ -->
     <div class="toggle-group">
       <label for="hasMakeUp">Подпиточный трубопровод (Независимая схема)</label>
       <input type="checkbox" id="hasMakeUp" onchange="toggleMakeUp()">
     </div>
 
-    <!-- Блок подпитки -->
     <div id="makeUpBlock" class="hidden" style="margin-top: 10px;">
       <h4>Расходомер подпитки</h4>
       <div class="row">
@@ -245,7 +336,7 @@
         <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
       </div>
 
-      <div class="toggle-group" style="margin-top: 8px; background: #fff;">
+      <div class="toggle-group" style="margin-top: 8px;">
         <label for="hasMakeUpPress" style="font-size: 12px;">+ Датчик давления на подпитке (Pподп)</label>
         <input type="checkbox" id="hasMakeUpPress" onchange="toggleMakeUpSensors()">
       </div>
@@ -261,7 +352,7 @@
         </div>
       </div>
 
-      <div class="toggle-group" style="margin-top: 8px; background: #fff;">
+      <div class="toggle-group" style="margin-top: 8px;">
         <label for="hasMakeUpTemp" style="font-size: 12px;">+ Термопреобразователь на подпитке (Tподп)</label>
         <input type="checkbox" id="hasMakeUpTemp" onchange="toggleMakeUpSensors()">
       </div>
@@ -457,15 +548,12 @@
   }
 
   // --- ЛОГИКА АВТОМАТИЧЕСКОГО ЗАКРЫТИЯ КЛАВИАТУРЫ ---
-
-  // 1. Скрытие при движении/скролле страницы
   window.addEventListener('touchmove', function() {
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
       document.activeElement.blur();
     }
   });
 
-  // 2. Скрытие при клике вне полей ввода
   document.addEventListener('click', function(event) {
     const isInput = event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'BUTTON';
     if (!isInput && document.activeElement) {
@@ -473,7 +561,6 @@
     }
   });
 
-  // 3. Скрытие при нажатии Enter / «Готово» на виртуальной клавиатуре
   document.querySelectorAll('input').forEach(input => {
     input.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
