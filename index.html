@@ -596,7 +596,9 @@
       closePicker();
       const input = document.getElementById(activeTargetInputId);
       input.removeAttribute('readonly');
-      input.focus();
+      input.onclick = null; // Удаляем открывание модалки при клике
+      input.value = '';
+      setTimeout(() => input.focus(), 100);
     };
     listContainer.appendChild(manualItem);
 
@@ -640,6 +642,8 @@
         const input = document.getElementById(activeTargetInputId);
         input.value = model;
         input.setAttribute('readonly', 'readonly');
+        // Возвращаем событие клика для открытия модалки, если пользователь захочет перевыбрать
+        input.onclick = function() { openPicker(category, activeTargetInputId); };
         closePicker();
       };
       listContainer.appendChild(item);
