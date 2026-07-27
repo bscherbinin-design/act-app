@@ -6,7 +6,6 @@
   <title>Акт проверки узла учета</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Переменные темы Telegram с фоллбэками для светлой темы */
     :root {
       --bg-color: var(--tg-theme-bg-color, #f0f2f5);
       --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
@@ -62,7 +61,6 @@
       margin-bottom: 3px; 
     }
     
-    /* Инпуты адаптивные к теме */
     input, select { 
       width: 100%; 
       padding: 10px; 
@@ -79,9 +77,6 @@
       outline: none; 
     }
 
-    /* Адаптация системных иконок календаря и часов под тёмный режим */
-    [scheme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
-    [scheme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="time"]::-webkit-calendar-picker-indicator {
       filter: var(--tg-color-scheme, light) == 'dark' ? invert(1) : none;
@@ -152,7 +147,7 @@
         <label>Вид ресурса</label>
         <select id="resourceType" onchange="toggleResourceType()">
           <option value="Тепловая энергия">Тепловая энергия</option>
-          <option value="ГВС">ГВС</option>
+          <option value="ГВС" selected>ГВС</option>
           <option value="ХВС">ХВС</option>
         </select>
       </div>
@@ -197,7 +192,7 @@
   <div class="card">
     <h3>3. Расходомеры (ПР)</h3>
     
-    <h4>Подающий трубопровод</h4>
+    <h4 id="prInTitle">Подающий трубопровод</h4>
     <div class="row">
       <div><label>Тип прибора</label><input type="text" id="prInType" placeholder="ВЭПС-Р-ПБ2-01"></div>
       <div><label>Ду (мм)</label><input type="number" id="prInDu" placeholder="25"></div>
@@ -219,7 +214,7 @@
 
     <div id="prOutBlock">
       <hr class="section-divider">
-      <h4 id="prOutTitle">Обратный трубопровод</h4>
+      <h4 id="prOutTitle">Циркуляционный трубопровод</h4>
       <div class="row">
         <div><label>Тип прибора</label><input type="text" id="prOutType" placeholder="ВЭПС-Р-ПБ2-01"></div>
         <div><label>Ду (мм)</label><input type="number" id="prOutDu" placeholder="25"></div>
@@ -239,25 +234,33 @@
   <!-- 4. ТЕРМОПРЕОБРАЗОВАТЕЛИ -->
   <div class="card" id="tempSection">
     <h3>4. Комплект термопреобразователей</h3>
-    <div class="row">
-      <div><label>Тип комплекта</label><input type="text" id="ktpType" placeholder="КТПТР-06"></div>
-      <div><label>Зав. № (Подача)</label><input type="text" id="ktpInSn" placeholder="910"></div>
-      <div><label>Зав. № (Обр./Цирк.)</label><input type="text" id="ktpOutSn" placeholder="910 A"></div>
+    
+    <div class="toggle-group" id="tempToggleGroup">
+      <label for="hasTemp">Установлены термопреобразователи</label>
+      <input type="checkbox" id="hasTemp" checked onchange="toggleTemp()">
     </div>
-    <div class="row">
-      <div><label>Замер T под. (°C)</label><input type="number" step="0.1" id="ktpInT" placeholder="69"></div>
-      <div><label>Замер T обр. (°C)</label><input type="number" step="0.1" id="ktpOutT" placeholder="52"></div>
-    </div>
-    <div class="row">
-      <div><label>Среднечас. T под.</label><input type="number" step="0.1" id="ktpInTavg" placeholder="69"></div>
-      <div><label>Среднечас. T обр.</label><input type="number" step="0.1" id="ktpOutTavg" placeholder="52"></div>
-    </div>
-    <div class="row">
-      <div><label>Поверка (Аршин)</label><input type="date" id="ktpPov"></div>
-    </div>
-    <div class="row">
-      <div><label>Пломба РСО (Под.)</label><input type="text" id="ktpInSeal" placeholder="0044668"></div>
-      <div><label>Пломба РСО (Обр.)</label><input type="text" id="ktpOutSeal" placeholder="0044669"></div>
+
+    <div id="tempBlock" style="margin-top: 10px;">
+      <div class="row">
+        <div><label>Тип комплекта</label><input type="text" id="ktpType" placeholder="КТПТР-06"></div>
+        <div><label>Зав. № (Подача)</label><input type="text" id="ktpInSn" placeholder="910"></div>
+        <div><label>Зав. № (Обр./Цирк.)</label><input type="text" id="ktpOutSn" placeholder="910 A"></div>
+      </div>
+      <div class="row">
+        <div><label>Замер T под. (°C)</label><input type="number" step="0.1" id="ktpInT" placeholder="69"></div>
+        <div><label>Замер T обр./цирк. (°C)</label><input type="number" step="0.1" id="ktpOutT" placeholder="52"></div>
+      </div>
+      <div class="row">
+        <div><label>Среднечас. T под.</label><input type="number" step="0.1" id="ktpInTavg" placeholder="69"></div>
+        <div><label>Среднечас. T обр./цирк.</label><input type="number" step="0.1" id="ktpOutTavg" placeholder="52"></div>
+      </div>
+      <div class="row">
+        <div><label>Поверка (Аршин)</label><input type="date" id="ktpPov"></div>
+      </div>
+      <div class="row">
+        <div><label>Пломба РСО (Под.)</label><input type="text" id="ktpInSeal" placeholder="0044668"></div>
+        <div><label>Пломба РСО (Обр./Цирк.)</label><input type="text" id="ktpOutSeal" placeholder="0044669"></div>
+      </div>
     </div>
   </div>
 
@@ -271,13 +274,13 @@
     <h4>Вес импульса в вычислителе (м³/имп)</h4>
     <div class="row">
       <div><label>Подача</label><input type="text" id="impCalcIn" placeholder="0.001"></div>
-      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Обратка</label><input type="text" id="impCalcOut" placeholder="0.001"></div>
+      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Циркуляция</label><input type="text" id="impCalcOut" placeholder="0.001"></div>
     </div>
 
     <h4>Вес импульса в расходомере (м³/имп)</h4>
     <div class="row">
       <div><label>Подача</label><input type="text" id="impPrIn" placeholder="0.001"></div>
-      <div id="impPrOutGroup"><label id="lblImpPrOut">Обратка</label><input type="text" id="impPrOut" placeholder="0.001"></div>
+      <div id="impPrOutGroup"><label id="lblImpPrOut">Циркуляция</label><input type="text" id="impPrOut" placeholder="0.001"></div>
     </div>
   </div>
 
@@ -286,12 +289,12 @@
     <h3>6. Дополнительное оборудование</h3>
     
     <div class="toggle-group">
-      <label for="hasPressure">Датчики давления (Подача / Обратка)</label>
+      <label for="hasPressure">Датчики давления (Подача / Обратка / Циркуляция)</label>
       <input type="checkbox" id="hasPressure" checked onchange="togglePressure()">
     </div>
 
     <div id="pressBlock" style="margin-top: 10px;">
-      <h4>Подающий трубопровод (P1)</h4>
+      <h4 id="pressInTitle">Подающий трубопровод (P1)</h4>
       <div class="row">
         <div><label>Тип</label><input type="text" id="pressInType" placeholder="СДВ-И"></div>
         <div><label>Зав. №</label><input type="text" id="pressInSn" placeholder="245310"></div>
@@ -304,7 +307,7 @@
 
       <div id="pressOutGroup">
         <hr class="section-divider">
-        <h4>Обратный трубопровод (P2)</h4>
+        <h4 id="pressOutTitle">Циркуляционный трубопровод (P2)</h4>
         <div class="row">
           <div><label>Тип</label><input type="text" id="pressOutType" placeholder="СДВ-И"></div>
           <div><label>Зав. №</label><input type="text" id="pressOutSn" placeholder="245366"></div>
@@ -317,57 +320,58 @@
       </div>
     </div>
 
-    <hr class="section-divider">
-
-    <div class="toggle-group">
-      <label for="hasMakeUp">Подпиточный трубопровод (Независимая схема)</label>
-      <input type="checkbox" id="hasMakeUp" onchange="toggleMakeUp()">
-    </div>
-
-    <div id="makeUpBlock" class="hidden" style="margin-top: 10px;">
-      <h4>Расходомер подпитки</h4>
-      <div class="row">
-        <div><label>Тип ПР подпитки</label><input type="text" id="makeUpType" placeholder="ВЭПС"></div>
-        <div><label>Зав. №</label><input type="text" id="makeUpSn"></div>
-      </div>
-      <div class="row">
-        <div><label>Поверка</label><input type="date" id="makeUpPov"></div>
-        <div><label>Показания (м³)</label><input type="number" step="0.01" id="makeUpVal"></div>
-        <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
+    <!-- БЛОК ПОДПИТКИ (СКРЫВАЕТСЯ ДЛЯ ГВС И ХВС) -->
+    <div id="makeUpMainToggleGroup">
+      <hr class="section-divider">
+      <div class="toggle-group">
+        <label for="hasMakeUp">Подпиточный трубопровод (Независимая схема)</label>
+        <input type="checkbox" id="hasMakeUp" onchange="toggleMakeUp()">
       </div>
 
-      <div class="toggle-group" style="margin-top: 8px;">
-        <label for="hasMakeUpPress" style="font-size: 12px;">+ Датчик давления на подпитке (Pподп)</label>
-        <input type="checkbox" id="hasMakeUpPress" onchange="toggleMakeUpSensors()">
-      </div>
-      <div id="makeUpPressBlock" class="hidden" style="margin-top: 6px;">
+      <div id="makeUpBlock" class="hidden" style="margin-top: 10px;">
+        <h4>Расходомер подпитки</h4>
         <div class="row">
-          <div><label>Тип прибора</label><input type="text" id="makeUpPressType" placeholder="СДВ-И"></div>
-          <div><label>Зав. №</label><input type="text" id="makeUpPressSn"></div>
+          <div><label>Тип ПР подпитки</label><input type="text" id="makeUpType" placeholder="ВЭПС"></div>
+          <div><label>Зав. №</label><input type="text" id="makeUpSn"></div>
         </div>
         <div class="row">
-          <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="makeUpPressVal" placeholder="4.0"></div>
-          <div><label>Поверка</label><input type="date" id="makeUpPressPov"></div>
-          <div><label>Пломба</label><input type="text" id="makeUpPressSeal"></div>
+          <div><label>Поверка</label><input type="date" id="makeUpPov"></div>
+          <div><label>Показания (м³)</label><input type="number" step="0.01" id="makeUpVal"></div>
+          <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
         </div>
-      </div>
 
-      <div class="toggle-group" style="margin-top: 8px;">
-        <label for="hasMakeUpTemp" style="font-size: 12px;">+ Термопреобразователь на подпитке (Tподп)</label>
-        <input type="checkbox" id="hasMakeUpTemp" onchange="toggleMakeUpSensors()">
-      </div>
-      <div id="makeUpTempBlock" class="hidden" style="margin-top: 6px;">
-        <div class="row">
-          <div><label>Тип прибора</label><input type="text" id="makeUpTempType" placeholder="КТПТР"></div>
-          <div><label>Зав. №</label><input type="text" id="makeUpTempSn"></div>
+        <div class="toggle-group" style="margin-top: 8px;">
+          <label for="hasMakeUpPress" style="font-size: 12px;">+ Датчик давления на подпитке (Pподп)</label>
+          <input type="checkbox" id="hasMakeUpPress" onchange="toggleMakeUpSensors()">
         </div>
-        <div class="row">
-          <div><label>Замер T (°C)</label><input type="number" step="0.1" id="makeUpTempVal" placeholder="15"></div>
-          <div><label>Поверка</label><input type="date" id="makeUpTempPov"></div>
-          <div><label>Пломба</label><input type="text" id="makeUpTempSeal"></div>
+        <div id="makeUpPressBlock" class="hidden" style="margin-top: 6px;">
+          <div class="row">
+            <div><label>Тип прибора</label><input type="text" id="makeUpPressType" placeholder="СДВ-И"></div>
+            <div><label>Зав. №</label><input type="text" id="makeUpPressSn"></div>
+          </div>
+          <div class="row">
+            <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="makeUpPressVal" placeholder="4.0"></div>
+            <div><label>Поверка</label><input type="date" id="makeUpPressPov"></div>
+            <div><label>Пломба</label><input type="text" id="makeUpPressSeal"></div>
+          </div>
         </div>
-      </div>
 
+        <div class="toggle-group" style="margin-top: 8px;">
+          <label for="hasMakeUpTemp" style="font-size: 12px;">+ Термопреобразователь на подпитке (Tподп)</label>
+          <input type="checkbox" id="hasMakeUpTemp" onchange="toggleMakeUpSensors()">
+        </div>
+        <div id="makeUpTempBlock" class="hidden" style="margin-top: 6px;">
+          <div class="row">
+            <div><label>Тип прибора</label><input type="text" id="makeUpTempType" placeholder="КТПТР"></div>
+            <div><label>Зав. №</label><input type="text" id="makeUpTempSn"></div>
+          </div>
+          <div class="row">
+            <div><label>Замер T (°C)</label><input type="number" step="0.1" id="makeUpTempVal" placeholder="15"></div>
+            <div><label>Поверка</label><input type="date" id="makeUpTempPov"></div>
+            <div><label>Пломба</label><input type="text" id="makeUpTempSeal"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -402,24 +406,47 @@
   const now = new Date();
   document.getElementById('actTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+  // Вызываем сразу при загрузке, чтобы установить верный вид под ГВС (или заголовок)
+  toggleResourceType();
+
   function toggleResourceType() {
     const res = document.getElementById('resourceType').value;
     const isHvs = (res === 'ХВС');
     const isGvs = (res === 'ГВС');
+    const isHeat = (res === 'Тепловая энергия');
 
+    // 1. Вычислитель (для ХВС нет, для Тепла и ГВС 100% есть)
     document.getElementById('calcSection').classList.toggle('hidden', isHvs);
-    document.getElementById('tempSection').classList.toggle('hidden', isHvs);
+
+    // 2. Схема и импульсы (для ХВС нет)
     document.getElementById('schemeSection').classList.toggle('hidden', isHvs);
 
+    // 3. Переключатель расходомеров:
     document.getElementById('prOutToggleGroup').classList.toggle('hidden', isHvs);
     if (isHvs) {
       document.getElementById('hasPrOut').checked = false;
-    } else {
-      document.getElementById('hasPrOut').checked = true;
+    } else if (isGvs) {
+      document.getElementById('hasPrOut').checked = true; // На ГВС 100% два ПР
     }
     togglePrOut();
 
+    // 4. Термопреобразователи:
+    // На ХВС скрываем полностью. На Тепло есть всегда, на ГВС — может быть, а может не быть (чекбокс доступен).
+    document.getElementById('tempSection').classList.toggle('hidden', isHvs);
+    
+    // 5. Подпитка (бывает ТОЛЬКО на тепловой энергии)
+    const makeUpToggleGroup = document.getElementById('makeUpMainToggleGroup');
+    if (isHeat) {
+      makeUpToggleGroup.classList.remove('hidden');
+    } else {
+      makeUpToggleGroup.classList.add('hidden');
+      document.getElementById('hasMakeUp').checked = false;
+      toggleMakeUp();
+    }
+
+    // Текстовые заголовки под тип ресурса
     document.getElementById('prOutTitle').innerText = isGvs ? "Циркуляционный трубопровод" : "Обратный трубопровод";
+    document.getElementById('pressOutTitle').innerText = isGvs ? "Циркуляционный трубопровод (P2)" : "Обратный трубопровод (P2)";
     document.getElementById('lblImpCalcOut').innerText = isGvs ? "Циркуляция" : "Обратка";
     document.getElementById('lblImpPrOut').innerText = isGvs ? "Циркуляция" : "Обратка";
   }
@@ -429,6 +456,11 @@
     document.getElementById('prOutBlock').classList.toggle('hidden', !checked);
     document.getElementById('impCalcOutGroup').classList.toggle('hidden', !checked);
     document.getElementById('impPrOutGroup').classList.toggle('hidden', !checked);
+  }
+
+  function toggleTemp() {
+    const checked = document.getElementById('hasTemp').checked;
+    document.getElementById('tempBlock').classList.toggle('hidden', !checked);
   }
 
   function togglePressure() {
@@ -487,6 +519,7 @@
       prOutPov: document.getElementById('prOutPov').value,
       prOutSeal: document.getElementById('prOutSeal').value,
 
+      hasTemp: document.getElementById('hasTemp').checked,
       ktpType: document.getElementById('ktpType').value,
       ktpInSn: document.getElementById('ktpInSn').value,
       ktpOutSn: document.getElementById('ktpOutSn').value,
@@ -547,7 +580,7 @@
     tg.sendData(JSON.stringify(formData));
   }
 
-  // --- ЛОГИКА АВТОМАТИЧЕСКОГО ЗАКРЫТИЯ КЛАВИАТУРЫ ---
+  // --- Закрытие клавиатуры при скролле / тапе ---
   window.addEventListener('touchmove', function() {
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
       document.activeElement.blur();
