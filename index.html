@@ -161,10 +161,18 @@
     <div class="row">
       <div><label>Схема потребления</label><input type="text" id="schemeFormula" placeholder="СП-03"></div>
     </div>
-    <label>Вес импульса в вычислителе (м³/имп)</label>
-    <input type="text" id="impCalc" placeholder="по под. 0.001 / по обр. 0.001">
-    <label>Вес импульса в расходомере (м³/имп)</label>
-    <input type="text" id="impPr" placeholder="по под. 0.001 / по обр. 0.001">
+    
+    <h4>Вес импульса в вычислителе (м³/имп)</h4>
+    <div class="row">
+      <div><label>Подача</label><input type="text" id="impCalcIn" placeholder="0.001"></div>
+      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Обратка</label><input type="text" id="impCalcOut" placeholder="0.001"></div>
+    </div>
+
+    <h4>Вес импульса в расходомере (м³/имп)</h4>
+    <div class="row">
+      <div><label>Подача</label><input type="text" id="impPrIn" placeholder="0.001"></div>
+      <div id="impPrOutGroup"><label id="lblImpPrOut">Обратка</label><input type="text" id="impPrOut" placeholder="0.001"></div>
+    </div>
   </div>
 
   <!-- 6. ВАРИАТИВНОЕ ОБОРУДОВАНИЕ -->
@@ -226,7 +234,6 @@
         <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
       </div>
 
-      <!-- Разделенные тумблеры для давления и температуры на подпитке -->
       <div class="toggle-group" style="margin-top: 8px; background: #fff;">
         <label for="hasMakeUpPress" style="font-size: 12px;">+ Датчик давления на подпитке (Pподп)</label>
         <input type="checkbox" id="hasMakeUpPress" onchange="toggleMakeUpSensors()">
@@ -311,11 +318,15 @@
     togglePrOut();
 
     document.getElementById('prOutTitle').innerText = isGvs ? "Циркуляционный трубопровод" : "Обратный трубопровод";
+    document.getElementById('lblImpCalcOut').innerText = isGvs ? "Циркуляция" : "Обратка";
+    document.getElementById('lblImpPrOut').innerText = isGvs ? "Циркуляция" : "Обратка";
   }
 
   function togglePrOut() {
     const checked = document.getElementById('hasPrOut').checked;
     document.getElementById('prOutBlock').classList.toggle('hidden', !checked);
+    document.getElementById('impCalcOutGroup').classList.toggle('hidden', !checked);
+    document.getElementById('impPrOutGroup').classList.toggle('hidden', !checked);
   }
 
   function togglePressure() {
@@ -386,8 +397,10 @@
       ktpOutSeal: document.getElementById('ktpOutSeal').value,
 
       schemeFormula: document.getElementById('schemeFormula').value,
-      impCalc: document.getElementById('impCalc').value,
-      impPr: document.getElementById('impPr').value,
+      impCalcIn: document.getElementById('impCalcIn').value,
+      impCalcOut: document.getElementById('impCalcOut').value,
+      impPrIn: document.getElementById('impPrIn').value,
+      impPrOut: document.getElementById('impPrOut').value,
 
       hasPressure: document.getElementById('hasPressure').checked,
       pressInType: document.getElementById('pressInType').value,
