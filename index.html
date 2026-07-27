@@ -59,7 +59,7 @@
       display: block; 
       margin-top: 8px; 
       margin-bottom: 3px; 
-    }
+    } 
     
     input, select { 
       width: 100%; 
@@ -157,7 +157,15 @@
     
     <div class="row">
       <div><label>№ Договора</label><input type="text" id="docNum" placeholder="НФ00ТВ0000011047"></div>
-      <div><label>Основание</label><input type="text" id="reason" value="по заявлению абонента"></div>
+      <div>
+        <!-- ПРАВКА 1: Выпадающий список для основания -->
+        <label>Основание</label>
+        <select id="reason">
+          <option value="По заявлению абонента" selected>По заявлению абонента</option>
+          <option value="Плановое обследование">Плановое обследование</option>
+          <option value="Отдел инициации сбыта">Отдел инициации сбыта</option>
+        </select>
+      </div>
     </div>
     
     <label>Адрес объекта</label>
@@ -271,16 +279,11 @@
       <div><label>Схема потребления</label><input type="text" id="schemeFormula" placeholder="СП-03"></div>
     </div>
     
-    <h4>Вес импульса в вычислителе (м³/имп)</h4>
+    <!-- ПРАВКА 2: Упрощенные поля веса импульса -->
+    <h4>Вес импульса в тепловычислителе (м³/имп)</h4>
     <div class="row">
-      <div><label>Подача</label><input type="text" id="impCalcIn" placeholder="0.001"></div>
-      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Циркуляция</label><input type="text" id="impCalcOut" placeholder="0.001"></div>
-    </div>
-
-    <h4>Вес импульса в расходомере (м³/имп)</h4>
-    <div class="row">
-      <div><label>Подача</label><input type="text" id="impPrIn" placeholder="0.001"></div>
-      <div id="impPrOutGroup"><label id="lblImpPrOut">Циркуляция</label><input type="text" id="impPrOut" placeholder="0.001"></div>
+      <div><label>Подающий трубопровод</label><input type="text" id="impCalcIn" placeholder="0.001"></div>
+      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Циркуляционный трубопровод</label><input type="text" id="impCalcOut" placeholder="0.001"></div>
     </div>
   </div>
 
@@ -320,7 +323,7 @@
       </div>
     </div>
 
-    <!-- БЛОК ПОДПИТКИ (СКРЫВАЕТСЯ ДЛЯ ГВС И ХВС) -->
+    <!-- БЛОК ПОДПИТКИ -->
     <div id="makeUpMainToggleGroup">
       <hr class="section-divider">
       <div class="toggle-group">
@@ -385,12 +388,18 @@
       <option value="непригодным">Непригодным</option>
     </select>
 
+    <!-- ПРАВКА 3: Опциональный срок действия -->
     <label>Срок действия пригодности (до):</label>
-    <input type="date" id="statusUntilDate">
+    <input type="date" id="statusUntilDate" class="hidden">
+    <div class="toggle-group" style="margin-top: 4px;">
+      <label for="untilMpi" style="font-size: 12px;">До окончания срока МПИ</label>
+      <input type="checkbox" id="untilMpi" checked onchange="toggleUntilDate()">
+    </div>
 
-    <label>Представитель РСО (Инспектор)</label>
+    <!-- ПРАВКА 4: Дефолтное значение для представителя РСО -->
+    <label style="margin-top: 12px;">Представитель РСО (Инспектор)</label>
     <div class="row">
-      <div><input type="text" id="inspectorPost" value="инженер технической инспекции"></div>
+      <div><input type="text" id="inspectorPost" value="Инженер ТКиИ"></div>
       <div><input type="text" id="inspectorFio" placeholder="Щербинин Б.С." required></div>
     </div>
   </div>
@@ -406,8 +415,13 @@
   const now = new Date();
   document.getElementById('actTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  // Вызываем сразу при загрузке, чтобы установить верный вид под ГВС (или заголовок)
   toggleResourceType();
+  toggleUntilDate();
+
+  function toggleUntilDate() {
+    const isMpi = document.getElementById('untilMpi').checked;
+    document.getElementById('statusUntilDate').classList.toggle('hidden', isMpi);
+  }
 
   function toggleResourceType() {
     const res = document.getElementById('resourceType').value;
@@ -415,26 +429,19 @@
     const isGvs = (res === 'ГВС');
     const isHeat = (res === 'Тепловая энергия');
 
-    // 1. Вычислитель (для ХВС нет, для Тепла и ГВС 100% есть)
     document.getElementById('calcSection').classList.toggle('hidden', isHvs);
-
-    // 2. Схема и импульсы (для ХВС нет)
     document.getElementById('schemeSection').classList.toggle('hidden', isHvs);
 
-    // 3. Переключатель расходомеров:
     document.getElementById('prOutToggleGroup').classList.toggle('hidden', isHvs);
     if (isHvs) {
       document.getElementById('hasPrOut').checked = false;
     } else if (isGvs) {
-      document.getElementById('hasPrOut').checked = true; // На ГВС 100% два ПР
+      document.getElementById('hasPrOut').checked = true;
     }
     togglePrOut();
 
-    // 4. Термопреобразователи:
-    // На ХВС скрываем полностью. На Тепло есть всегда, на ГВС — может быть, а может не быть (чекбокс доступен).
     document.getElementById('tempSection').classList.toggle('hidden', isHvs);
     
-    // 5. Подпитка (бывает ТОЛЬКО на тепловой энергии)
     const makeUpToggleGroup = document.getElementById('makeUpMainToggleGroup');
     if (isHeat) {
       makeUpToggleGroup.classList.remove('hidden');
@@ -444,18 +451,15 @@
       toggleMakeUp();
     }
 
-    // Текстовые заголовки под тип ресурса
     document.getElementById('prOutTitle').innerText = isGvs ? "Циркуляционный трубопровод" : "Обратный трубопровод";
     document.getElementById('pressOutTitle').innerText = isGvs ? "Циркуляционный трубопровод (P2)" : "Обратный трубопровод (P2)";
-    document.getElementById('lblImpCalcOut').innerText = isGvs ? "Циркуляция" : "Обратка";
-    document.getElementById('lblImpPrOut').innerText = isGvs ? "Циркуляция" : "Обратка";
+    document.getElementById('lblImpCalcOut').innerText = isGvs ? "Циркуляционный трубопровод" : "Обратный трубопровод";
   }
 
   function togglePrOut() {
     const checked = document.getElementById('hasPrOut').checked;
     document.getElementById('prOutBlock').classList.toggle('hidden', !checked);
     document.getElementById('impCalcOutGroup').classList.toggle('hidden', !checked);
-    document.getElementById('impPrOutGroup').classList.toggle('hidden', !checked);
   }
 
   function toggleTemp() {
@@ -482,6 +486,9 @@
   }
 
   function sendData() {
+    const isMpi = document.getElementById('untilMpi').checked;
+    const untilDateValue = isMpi ? "до окончания срока МПИ" : document.getElementById('statusUntilDate').value;
+
     const formData = {
       actDate: document.getElementById('actDate').value,
       actTime: document.getElementById('actTime').value,
@@ -534,8 +541,6 @@
       schemeFormula: document.getElementById('schemeFormula').value,
       impCalcIn: document.getElementById('impCalcIn').value,
       impCalcOut: document.getElementById('impCalcOut').value,
-      impPrIn: document.getElementById('impPrIn').value,
-      impPrOut: document.getElementById('impPrOut').value,
 
       hasPressure: document.getElementById('hasPressure').checked,
       pressInType: document.getElementById('pressInType').value,
@@ -572,7 +577,7 @@
       makeUpTempSeal: document.getElementById('makeUpTempSeal').value,
 
       status: document.getElementById('status').value,
-      statusUntilDate: document.getElementById('statusUntilDate').value,
+      statusUntilDate: untilDateValue,
       inspectorPost: document.getElementById('inspectorPost').value,
       inspectorFio: document.getElementById('inspectorFio').value
     };
@@ -580,7 +585,7 @@
     tg.sendData(JSON.stringify(formData));
   }
 
-  // --- Закрытие клавиатуры при скролле / тапе ---
+  // Скрытие клавиатуры
   window.addEventListener('touchmove', function() {
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
       document.activeElement.blur();
