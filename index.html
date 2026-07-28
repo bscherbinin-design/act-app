@@ -25,7 +25,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: var(--bg-color); 
       padding: 12px; 
-      padding-bottom: 90px; /* Отступ под липкую кнопку */
+      padding-bottom: 65px; /* Компактный отступ под липкую кнопку */
       margin: 0; 
       color: var(--text-color); 
     }
@@ -36,6 +36,7 @@
       border-radius: 12px; 
       box-shadow: 0 1px 4px rgba(0,0,0,0.15); 
       margin-bottom: 12px; 
+      border: 1px solid var(--border-color);
     }
 
     h3 { 
@@ -119,42 +120,13 @@
       transform: scale(1.3); 
     }
 
-    /* Липкая панель с кнопкой */
-    .sticky-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 10px 12px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      z-index: 999;
-    }
-
-    .btn-submit { 
-      width: 100%; 
-      background: var(--accent-color); 
-      color: var(--button-text); 
-      border: none; 
-      padding: 14px; 
-      border-radius: 10px; 
-      font-size: 16px; 
-      font-weight: bold; 
-      cursor: pointer; 
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
-    }
-
-    .btn-submit:active { opacity: 0.85; }
-    .section-divider { border: 0; border-top: 1px dashed var(--border-color); margin: 12px 0; }
-
-    /* Баннер черновика */
+    /* Адаптивный и аккуратный баннер черновика */
     .draft-banner {
-      background: #e3f2fd;
+      background: var(--card-bg);
       border: 1px solid var(--accent-color);
-      border-radius: 8px;
-      padding: 10px;
+      color: var(--text-color);
+      border-radius: 10px;
+      padding: 10px 12px;
       margin-bottom: 12px;
       display: flex;
       align-items: center;
@@ -175,31 +147,61 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .btn-confirm { background: var(--accent-color); color: white; }
-    .btn-discard { background: #e0e0e0; color: #333; }
+    .btn-confirm { background: var(--accent-color); color: var(--button-text); }
+    .btn-discard { background: transparent; color: var(--hint-color); border: 1px solid var(--border-color); }
 
-    /* Кнопки быстрых шаблонов */
+    /* Компактные кнопки быстрых шаблонов */
     .template-chips {
       display: flex;
+      flex-direction: column;
       gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
     }
 
     .chip {
       white-space: nowrap;
       background: var(--bg-color);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 6px 12px;
-      font-size: 12px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
       font-weight: 500;
       cursor: pointer;
+      color: var(--text-color);
     }
     .chip:active { background: rgba(36, 161, 222, 0.15); }
 
-    /* Модальное окно с полем поиска */
+    /* Компактная липкая панель */
+    .sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-color);
+      opacity: 0.96;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 8px 12px;
+      border-top: 1px solid var(--border-color);
+      z-index: 999;
+    }
+
+    .btn-submit { 
+      width: 100%; 
+      background: var(--accent-color); 
+      color: var(--button-text); 
+      border: none; 
+      padding: 10px 14px; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
+    }
+
+    .btn-submit:active { opacity: 0.85; }
+    .section-divider { border: 0; border-top: 1px dashed var(--border-color); margin: 12px 0; }
+
+    /* Модальное окно */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -274,6 +276,7 @@
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
+      color: var(--text-color);
     }
 
     .modal-item:active {
@@ -284,7 +287,7 @@
 <body>
 
 <div id="draftBanner" class="draft-banner hidden">
-  <span>Найден несохраненный черновик акта</span>
+  <span>Найден сохраненный черновик</span>
   <div class="draft-buttons">
     <button type="button" class="btn-small btn-confirm" onclick="loadDraft()">Загрузить</button>
     <button type="button" class="btn-small btn-discard" onclick="discardDraft()">Сбросить</button>
@@ -358,13 +361,13 @@
   </div>
 
   <!-- БЫСТРЫЕ ШАБЛОНЫ ОБОРУДОВАНИЯ -->
-<div class="card">
-  <h3>Быстрый выбор комплекта</h3>
-  <div class="template-chips">
-    <div class="chip" onclick="applyTemplate('vzlet_024m')">⚡ Взлет (ТСРВ-024М + ЭРСВ-440ЛВ + ТПС)</div>
-    <div class="chip" onclick="applyTemplate('spt_944')">⚡ Логика (СПТ-944 + ВЭПС + КТПТР-01)</div>
+  <div class="card">
+    <h3>Быстрый выбор комплекта</h3>
+    <div class="template-chips">
+      <div class="chip" onclick="applyTemplate('vzlet_024m')">⚡ Взлет (ТСРВ-024М + ЭРСВ-440ЛВ + ТПС)</div>
+      <div class="chip" onclick="applyTemplate('spt_944')">⚡ Логика (СПТ-944 + ВЭПС + КТПТР-01)</div>
+    </div>
   </div>
-</div>
 
   <!-- 2. ТЕПЛОВЫЧИСЛИТЕЛЬ -->
   <div class="card" id="calcSection">
@@ -372,7 +375,7 @@
     <div class="row">
       <div>
         <label>Тип прибора</label>
-        <input type="text" id="calcType" placeholder="Выберите или введите..." readonly onclick="openPicker('calculators', 'calcType')">
+        <input type="text" id="calcType" placeholder="Выберите..." readonly onclick="openPicker('calculators', 'calcType')">
       </div>
       <div><label>Заводской №</label><input type="text" id="calcSn" placeholder="01670"></div>
     </div>
@@ -398,7 +401,7 @@
     <div class="row">
       <div>
         <label>Тип прибора</label>
-        <input type="text" id="prInType" placeholder="Выберите или введите..." readonly onclick="openPicker('flowmeters', 'prInType')">
+        <input type="text" id="prInType" placeholder="Выберите..." readonly onclick="openPicker('flowmeters', 'prInType')">
       </div>
       <div><label>Ду (мм)</label><input type="number" id="prInDu" placeholder="25"></div>
       <div><label>Заводской №</label><input type="text" id="prInSn" placeholder="7255629"></div>
@@ -423,7 +426,7 @@
       <div class="row">
         <div>
           <label>Тип прибора</label>
-          <input type="text" id="prOutType" placeholder="Выберите или введите..." readonly onclick="openPicker('flowmeters', 'prOutType')">
+          <input type="text" id="prOutType" placeholder="Выберите..." readonly onclick="openPicker('flowmeters', 'prOutType')">
         </div>
         <div><label>Ду (мм)</label><input type="number" id="prOutDu" placeholder="25"></div>
         <div><label>Заводской №</label><input type="text" id="prOutSn" placeholder="7255544"></div>
@@ -452,7 +455,7 @@
       <div class="row">
         <div>
           <label>Тип комплекта</label>
-          <input type="text" id="ktpType" placeholder="Выберите или введите..." readonly onclick="openPicker('temperatures', 'ktpType')">
+          <input type="text" id="ktpType" placeholder="Выберите..." readonly onclick="openPicker('temperatures', 'ktpType')">
         </div>
         <div><label>Зав. № (Подача)</label><input type="text" id="ktpInSn" placeholder="910"></div>
         <div><label>Зав. № (Обр./Цирк.)</label><input type="text" id="ktpOutSn" placeholder="910 A"></div>
@@ -503,7 +506,7 @@
       <div class="row">
         <div>
           <label>Тип</label>
-          <input type="text" id="pressInType" placeholder="Выберите или введите..." readonly onclick="openPicker('pressures', 'pressInType')">
+          <input type="text" id="pressInType" placeholder="Выберите..." readonly onclick="openPicker('pressures', 'pressInType')">
         </div>
         <div><label>Зав. №</label><input type="text" id="pressInSn" placeholder="245310"></div>
       </div>
@@ -519,7 +522,7 @@
         <div class="row">
           <div>
             <label>Тип</label>
-            <input type="text" id="pressOutType" placeholder="Выберите или введите..." readonly onclick="openPicker('pressures', 'pressOutType')">
+            <input type="text" id="pressOutType" placeholder="Выберите..." readonly onclick="openPicker('pressures', 'pressOutType')">
           </div>
           <div><label>Зав. №</label><input type="text" id="pressOutSn" placeholder="245366"></div>
         </div>
@@ -621,7 +624,7 @@
 
 </form>
 
-<!-- ЛИПКАЯ КНОПКА ОТПРАВКИ -->
+<!-- КОМПАКТНАЯ ЛИПКАЯ КНОПКА ОТПРАВКИ -->
 <div class="sticky-footer">
   <button type="button" class="btn-submit" onclick="confirmAndSend()">Сформировать и отправить акт</button>
 </div>
@@ -687,13 +690,13 @@
       "Промприбор": ["ВЭПС-Р-ПБ2-01", "ВЭПС", "ВПС"],
       "Теплоком": ["ПРЭM"],
       "МастерФлоу": ["МФ", "МФ-5.2.1"],
-      "Взлет": ["ЭРСВ-420L", "ЭРСВ-430L", "ЭРСВ-520L"],
+      "Взлет": ["ЭРСВ-440ЛВ", "ЭРСВ-420L", "ЭРСВ-430L", "ЭРСВ-520L"],
       "Питерфлоу": ["Питерфлоу РС", "Питерфлоу K"],
     },
     temperatures: {
       "КТПТР": ["КТПТР-01", "КТПТР-05", "КТПТР-06", "КТПТР-08"],
       "КТСПР": ["КТСПР-001", "КТСПР-01"],
-      "Взлет": ["КСПТ"],
+      "Взлет": ["Взлет ТПС", "КСПТ"],
       "ТСП": ["ТСП-1088", "ТСП-N"]
     },
     pressures: {
@@ -793,7 +796,7 @@
 
     items.forEach(item => {
       const text = item.getAttribute('data-search-text');
-      if (!text) return; // пропуск сервисных кнопок ("Назад", "Ввести вручную")
+      if (!text) return;
       if (text.includes(query)) {
         item.style.display = 'flex';
       } else {
@@ -806,34 +809,26 @@
     document.getElementById('pickerModal').classList.remove('active');
   }
 
- // ПРИМЕНЕНИЕ БЫСТРЫХ ШАБЛОНОВ
-function applyTemplate(type) {
-  if (type === 'vzlet_024m') {
-    // 1. Взлет ТСРВ-024М + ЭРСВ-440ЛВ (2х) + Взлет ТПС
-    document.getElementById('calcType').value = 'Взлет ТСРВ-024M';
-    
-    document.getElementById('prInType').value = 'ЭРСВ-440ЛВ';
-    document.getElementById('prOutType').value = 'ЭРСВ-440ЛВ';
-    
-    document.getElementById('hasTemp').checked = true;
-    toggleTemp(); // Обновляем видимость блока ТП
-    document.getElementById('ktpType').value = 'ТСП-N'; // или 'КСПТ' (укажите марку ТПС, как она записана в вашем списке)
+  // ПРИМЕНЕНИЕ БЫСТРЫХ ШАБЛОНОВ
+  function applyTemplate(type) {
+    if (type === 'vzlet_024m') {
+      document.getElementById('calcType').value = 'Взлет ТСРВ-024M';
+      document.getElementById('prInType').value = 'ЭРСВ-440ЛВ';
+      document.getElementById('prOutType').value = 'ЭРСВ-440ЛВ';
+      document.getElementById('hasTemp').checked = true;
+      toggleTemp();
+      document.getElementById('ktpType').value = 'Взлет ТПС';
 
-  } else if (type === 'spt_944') {
-    // 2. СПТ-944 + ВЭПС (2х) + КТПТР-01
-    document.getElementById('calcType').value = 'СПТ-944';
-    
-    document.getElementById('prInType').value = 'ВЭПС';
-    document.getElementById('prOutType').value = 'ВЭПС';
-    
-    document.getElementById('hasTemp').checked = true;
-    toggleTemp(); // Обновляем видимость блока ТП
-    document.getElementById('ktpType').value = 'КТПТР-01';
+    } else if (type === 'spt_944') {
+      document.getElementById('calcType').value = 'СПТ-944';
+      document.getElementById('prInType').value = 'ВЭПС';
+      document.getElementById('prOutType').value = 'ВЭПС';
+      document.getElementById('hasTemp').checked = true;
+      toggleTemp();
+      document.getElementById('ktpType').value = 'КТПТР-01';
+    }
+    saveDraft();
   }
-
-  // Сохраняем обновленный черновик
-  saveDraft();
-}
 
   function formatDate(rawDate) {
     if (!rawDate) return '';
@@ -953,7 +948,6 @@ function applyTemplate(type) {
       }
     });
 
-    // Обновляем видимость блоков и подсветку дат
     toggleResourceType();
     toggleUntilDate();
     document.querySelectorAll('.pov-date-input').forEach(input => validateVerificationDate(input));
@@ -966,7 +960,6 @@ function applyTemplate(type) {
     document.getElementById('draftBanner').classList.add('hidden');
   }
 
-  // Автосохранение при любом вводе
   document.getElementById('actForm').addEventListener('input', saveDraft);
   document.getElementById('actForm').addEventListener('change', saveDraft);
 
@@ -1084,9 +1077,7 @@ function applyTemplate(type) {
       inspectorFio: document.getElementById('inspectorFio').value
     };
 
-    // Очищаем черновик после успешной отправки
     localStorage.removeItem(DRAFT_KEY);
-
     tg.sendData(JSON.stringify(formData));
   }
 
