@@ -15,6 +15,8 @@
       --button-text: var(--tg-theme-button-text-color, #ffffff);
       --input-bg: var(--tg-theme-bg-color, #ffffff);
       --border-color: rgba(120, 120, 120, 0.25);
+      --error-color: #e53935;
+      --error-bg: rgba(229, 57, 53, 0.08);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -23,6 +25,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: var(--bg-color); 
       padding: 12px; 
+      padding-bottom: 90px; /* Отступ под липкую кнопку */
       margin: 0; 
       color: var(--text-color); 
     }
@@ -70,11 +73,20 @@
       background: var(--input-bg); 
       color: var(--text-color);
       -webkit-text-size-adjust: 100%;
+      transition: border-color 0.2s, background-color 0.2s;
     }
 
     input:focus, select:focus { 
       border-color: var(--accent-color); 
       outline: none; 
+    }
+
+    /* Подсветка просроченной поверки */
+    input.expired-date {
+      border-color: var(--error-color) !important;
+      background-color: var(--error-bg) !important;
+      color: var(--error-color);
+      font-weight: bold;
     }
 
     .row { display: flex; gap: 8px; }
@@ -107,6 +119,20 @@
       transform: scale(1.3); 
     }
 
+    /* Липкая панель с кнопкой */
+    .sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 10px 12px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 999;
+    }
+
     .btn-submit { 
       width: 100%; 
       background: var(--accent-color); 
@@ -116,7 +142,6 @@
       border-radius: 10px; 
       font-size: 16px; 
       font-weight: bold; 
-      margin-top: 15px; 
       cursor: pointer; 
       box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
     }
@@ -124,7 +149,57 @@
     .btn-submit:active { opacity: 0.85; }
     .section-divider { border: 0; border-top: 1px dashed var(--border-color); margin: 12px 0; }
 
-    /* СТИЛИ МОДАЛЬНОГО ОКНА ДЛЯ ВЫБОРА БРЕНДА И МОДЕЛИ */
+    /* Баннер черновика */
+    .draft-banner {
+      background: #e3f2fd;
+      border: 1px solid var(--accent-color);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .draft-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-small {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-confirm { background: var(--accent-color); color: white; }
+    .btn-discard { background: #e0e0e0; color: #333; }
+
+    /* Кнопки быстрых шаблонов */
+    .template-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      white-space: nowrap;
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .chip:active { background: rgba(36, 161, 222, 0.15); }
+
+    /* Модальное окно с полем поиска */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -149,7 +224,8 @@
       border-top-left-radius: 16px;
       border-top-right-radius: 16px;
       padding: 16px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
     }
 
@@ -157,7 +233,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .modal-title {
@@ -174,10 +250,18 @@
       cursor: pointer;
     }
 
+    .search-input {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
     .modal-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      overflow-y: auto;
+      max-height: 60vh;
     }
 
     .modal-item {
@@ -198,6 +282,14 @@
   </style>
 </head>
 <body>
+
+<div id="draftBanner" class="draft-banner hidden">
+  <span>Найден несохраненный черновик акта</span>
+  <div class="draft-buttons">
+    <button type="button" class="btn-small btn-confirm" onclick="loadDraft()">Загрузить</button>
+    <button type="button" class="btn-small btn-discard" onclick="discardDraft()">Сбросить</button>
+  </div>
+</div>
 
 <form id="actForm">
 
@@ -265,6 +357,16 @@
     <input type="text" id="consumerRep">
   </div>
 
+  <!-- БЫСТРЫЕ ШАБЛОНЫ ОБОРУДОВАНИЯ -->
+  <div class="card">
+    <h3>Быстрый выбор комплекта</h3>
+    <div class="template-chips">
+      <div class="chip" onclick="applyTemplate('spt_prem')">⚡ СПТ-941.2 + 2x ПРЭМ</div>
+      <div class="chip" onclick="applyTemplate('vkt_veps')">⚡ ВКТ-7 + 2x ВЭПС</div>
+      <div class="chip" onclick="applyTemplate('vzlet')">⚡ Взлет ТСРВ + 2x ЭРСВ</div>
+    </div>
+  </div>
+
   <!-- 2. ТЕПЛОВЫЧИСЛИТЕЛЬ -->
   <div class="card" id="calcSection">
     <h3>2. Вычислитель</h3>
@@ -283,7 +385,7 @@
     </div>
     <div class="row">
       <div><label>Среднечас. Q (Гкал/ч)</label><input type="text" id="calcQavg" placeholder="—"></div>
-      <div><label>Поверка (Аршин)</label><input type="date" id="calcPov"></div>
+      <div><label>Поверка (Аршин)</label><input type="date" id="calcPov" class="pov-date-input"></div>
     </div>
     <label>№ пломбы РСО</label>
     <input type="text" id="calcSeal" placeholder="0037100">
@@ -307,7 +409,7 @@
       <div><label>Среднечас. (м³/ч)</label><input type="number" step="0.01" id="prInAvg" placeholder="0.48"></div>
     </div>
     <div class="row">
-      <div><label>Поверка (Аршин)</label><input type="date" id="prInPov"></div>
+      <div><label>Поверка (Аршин)</label><input type="date" id="prInPov" class="pov-date-input"></div>
       <div><label>№ пломбы РСО</label><input type="text" id="prInSeal" placeholder="0044666"></div>
     </div>
 
@@ -332,7 +434,7 @@
         <div><label>Среднечас. (м³/ч)</label><input type="number" step="0.01" id="prOutAvg" placeholder="0.44"></div>
       </div>
       <div class="row">
-        <div><label>Поверка (Аршин)</label><input type="date" id="prOutPov"></div>
+        <div><label>Поверка (Аршин)</label><input type="date" id="prOutPov" class="pov-date-input"></div>
         <div><label>№ пломбы РСО</label><input type="text" id="prOutSeal" placeholder="0044667"></div>
       </div>
     </div>
@@ -365,7 +467,7 @@
         <div><label>Среднечас. T обр./цирк.</label><input type="number" step="0.1" id="ktpOutTavg" placeholder="52"></div>
       </div>
       <div class="row">
-        <div><label>Поверка (Аршин)</label><input type="date" id="ktpPov"></div>
+        <div><label>Поверка (Аршин)</label><input type="date" id="ktpPov" class="pov-date-input"></div>
       </div>
       <div class="row">
         <div><label>Пломба РСО (Под.)</label><input type="text" id="ktpInSeal" placeholder="0044668"></div>
@@ -407,7 +509,7 @@
         <div><label>Зав. №</label><input type="text" id="pressInSn" placeholder="245310"></div>
       </div>
       <div class="row">
-        <div><label>Поверка</label><input type="date" id="pressInPov"></div>
+        <div><label>Поверка</label><input type="date" id="pressInPov" class="pov-date-input"></div>
         <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="pressInVal" placeholder="6.1"></div>
         <div><label>Пломба</label><input type="text" id="pressInSeal" placeholder="0044670"></div>
       </div>
@@ -423,7 +525,7 @@
           <div><label>Зав. №</label><input type="text" id="pressOutSn" placeholder="245366"></div>
         </div>
         <div class="row">
-          <div><label>Поверка</label><input type="date" id="pressOutPov"></div>
+          <div><label>Поверка</label><input type="date" id="pressOutPov" class="pov-date-input"></div>
           <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="pressOutVal" placeholder="6.1"></div>
           <div><label>Пломба</label><input type="text" id="pressOutSeal" placeholder="0044661"></div>
         </div>
@@ -448,7 +550,7 @@
           <div><label>Зав. №</label><input type="text" id="makeUpSn"></div>
         </div>
         <div class="row">
-          <div><label>Поверка</label><input type="date" id="makeUpPov"></div>
+          <div><label>Поверка</label><input type="date" id="makeUpPov" class="pov-date-input"></div>
           <div><label>Показания (м³)</label><input type="number" step="0.01" id="makeUpVal"></div>
           <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
         </div>
@@ -467,7 +569,7 @@
           </div>
           <div class="row">
             <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="makeUpPressVal" placeholder="4.0"></div>
-            <div><label>Поверка</label><input type="date" id="makeUpPressPov"></div>
+            <div><label>Поверка</label><input type="date" id="makeUpPressPov" class="pov-date-input"></div>
             <div><label>Пломба</label><input type="text" id="makeUpPressSeal"></div>
           </div>
         </div>
@@ -486,7 +588,7 @@
           </div>
           <div class="row">
             <div><label>Замер T (°C)</label><input type="number" step="0.1" id="makeUpTempVal" placeholder="15"></div>
-            <div><label>Поверка</label><input type="date" id="makeUpTempPov"></div>
+            <div><label>Поверка</label><input type="date" id="makeUpTempPov" class="pov-date-input"></div>
             <div><label>Пломба</label><input type="text" id="makeUpTempSeal"></div>
           </div>
         </div>
@@ -518,8 +620,12 @@
     </div>
   </div>
 
-  <button type="button" class="btn-submit" onclick="sendData()">Сформировать и отправить акт</button>
 </form>
+
+<!-- ЛИПКАЯ КНОПКА ОТПРАВКИ -->
+<div class="sticky-footer">
+  <button type="button" class="btn-submit" onclick="confirmAndSend()">Сформировать и отправить акт</button>
+</div>
 
 <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА БРЕНДА И МОДЕЛИ -->
 <div class="modal-overlay" id="pickerModal">
@@ -528,6 +634,7 @@
       <span class="modal-title" id="modalTitle">Выберите бренд</span>
       <button type="button" class="modal-close" onclick="closePicker()">✕</button>
     </div>
+    <input type="text" id="modalSearch" class="search-input" placeholder="Поиск прибора..." oninput="filterModalItems()">
     <div class="modal-list" id="modalList"></div>
   </div>
 </div>
@@ -536,14 +643,38 @@
   const tg = window.Telegram.WebApp;
   tg.expand();
 
+  const DRAFT_KEY = 'act_form_draft_v1';
+
   document.getElementById('actDate').valueAsDate = new Date();
   const now = new Date();
   document.getElementById('actTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   toggleResourceType();
   toggleUntilDate();
+  checkDraftOnLoad();
 
-  // ДЕРЕВО ОБОРУДОВАНИЯ (БРЕНДЫ И МОДЕЛИ)
+  // Отслеживание просрочки поверки для всех полей дат
+  document.querySelectorAll('.pov-date-input').forEach(input => {
+    input.addEventListener('change', () => validateVerificationDate(input));
+  });
+
+  function validateVerificationDate(input) {
+    if (!input.value) {
+      input.classList.remove('expired-date');
+      return;
+    }
+    const selectedDate = new Date(input.value);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    if (selectedDate < today) {
+      input.classList.add('expired-date');
+    } else {
+      input.classList.remove('expired-date');
+    }
+  }
+
+  // БАЗА ОБОРУДОВАНИЯ
   const equipmentData = {
     calculators: {
       "Логика": ["СПТ-940", "СПТ-941.1", "СПТ-941.2", "СПТ-943", "СПТ-944"],
@@ -577,16 +708,25 @@
 
   let activeTargetInputId = null;
   let currentCategory = null;
+  let modalState = 'brands'; 
+  let currentBrand = null;
 
   function openPicker(category, inputId) {
     activeTargetInputId = inputId;
     currentCategory = category;
+    modalState = 'brands';
+    document.getElementById('modalSearch').value = '';
     
+    renderBrands();
+    document.getElementById('pickerModal').classList.add('active');
+  }
+
+  function renderBrands() {
+    modalState = 'brands';
     document.getElementById('modalTitle').innerText = "Шаг 1: Выберите производителя";
     const listContainer = document.getElementById('modalList');
     listContainer.innerHTML = "";
 
-    // Опция ручного ввода
     const manualItem = document.createElement('div');
     manualItem.className = 'modal-item';
     manualItem.style.color = 'var(--accent-color)';
@@ -595,57 +735,71 @@
       closePicker();
       const input = document.getElementById(activeTargetInputId);
       input.removeAttribute('readonly');
-      input.onclick = null; // Удаляем открывание модалки при клике
+      input.onclick = null;
       input.value = '';
       setTimeout(() => input.focus(), 100);
     };
     listContainer.appendChild(manualItem);
 
-    // Список брендов
-    const brands = Object.keys(equipmentData[category]);
+    const brands = Object.keys(equipmentData[currentCategory]);
     brands.forEach(brand => {
       const item = document.createElement('div');
       item.className = 'modal-item';
+      item.setAttribute('data-search-text', brand.toLowerCase());
       item.innerHTML = `<span>${brand}</span> <span>›</span>`;
       item.onclick = function() {
-        showModels(category, brand);
+        showModels(brand);
       };
       listContainer.appendChild(item);
     });
-
-    document.getElementById('pickerModal').classList.add('active');
   }
 
-  function showModels(category, brand) {
+  function showModels(brand) {
+    modalState = 'models';
+    currentBrand = brand;
     document.getElementById('modalTitle').innerText = `Шаг 2: Модели ${brand}`;
     const listContainer = document.getElementById('modalList');
     listContainer.innerHTML = "";
 
-    // Кнопка возврата к брендам
     const backItem = document.createElement('div');
     backItem.className = 'modal-item';
     backItem.style.color = 'var(--hint-color)';
     backItem.innerText = "← Назад к брендам";
     backItem.onclick = function() {
-      openPicker(category, activeTargetInputId);
+      renderBrands();
     };
     listContainer.appendChild(backItem);
 
-    // Список моделей
-    const models = equipmentData[category][brand];
+    const models = equipmentData[currentCategory][brand];
     models.forEach(model => {
       const item = document.createElement('div');
       item.className = 'modal-item';
+      item.setAttribute('data-search-text', model.toLowerCase());
       item.innerText = model;
       item.onclick = function() {
         const input = document.getElementById(activeTargetInputId);
         input.value = model;
         input.setAttribute('readonly', 'readonly');
-        // Возвращаем событие клика для открытия модалки, если пользователь захочет перевыбрать
-        input.onclick = function() { openPicker(category, activeTargetInputId); };
+        input.onclick = function() { openPicker(currentCategory, activeTargetInputId); };
+        saveDraft();
         closePicker();
       };
       listContainer.appendChild(item);
+    });
+  }
+
+  function filterModalItems() {
+    const query = document.getElementById('modalSearch').value.toLowerCase().trim();
+    const items = document.querySelectorAll('#modalList .modal-item');
+
+    items.forEach(item => {
+      const text = item.getAttribute('data-search-text');
+      if (!text) return; // пропуск сервисных кнопок ("Назад", "Ввести вручную")
+      if (text.includes(query)) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
     });
   }
 
@@ -653,7 +807,33 @@
     document.getElementById('pickerModal').classList.remove('active');
   }
 
-  // Преобразование дат к виду "27.07.2026 г."
+  // ПРИМЕНЕНИЕ БЫСТРЫХ ШАБЛОНОВ
+  function applyTemplate(type) {
+    if (type === 'spt_prem') {
+      document.getElementById('calcType').value = 'СПТ-941.2';
+      document.getElementById('prInType').value = 'ПРЭM';
+      document.getElementById('prOutType').value = 'ПРЭM';
+      document.getElementById('ktpType').value = 'КТПТР-01';
+      document.getElementById('pressInType').value = 'СДВ-И';
+      document.getElementById('pressOutType').value = 'СДВ-И';
+    } else if (type === 'vkt_veps') {
+      document.getElementById('calcType').value = 'ВКТ-7';
+      document.getElementById('prInType').value = 'ВЭПС';
+      document.getElementById('prOutType').value = 'ВЭПС';
+      document.getElementById('ktpType').value = 'КТСПР-001';
+      document.getElementById('pressInType').value = 'MIDA-13P';
+      document.getElementById('pressOutType').value = 'MIDA-13P';
+    } else if (type === 'vzlet') {
+      document.getElementById('calcType').value = 'Взлет ТСРВ-024M';
+      document.getElementById('prInType').value = 'ЭРСВ-420L';
+      document.getElementById('prOutType').value = 'ЭРСВ-420L';
+      document.getElementById('ktpType').value = 'КСПТ';
+      document.getElementById('pressInType').value = 'ПД-1';
+      document.getElementById('pressOutType').value = 'ПД-1';
+    }
+    saveDraft();
+  }
+
   function formatDate(rawDate) {
     if (!rawDate) return '';
     const parts = rawDate.split('-');
@@ -729,6 +909,80 @@
     
     document.getElementById('makeUpPressBlock').classList.toggle('hidden', !hasPress);
     document.getElementById('makeUpTempBlock').classList.toggle('hidden', !hasTemp);
+  }
+
+  // СИСТЕМА АВТОСОХРАНЕНИЯ ЧЕРНОВИКА
+  function saveDraft() {
+    const form = document.getElementById('actForm');
+    const data = {};
+    const inputs = form.querySelectorAll('input, select');
+    
+    inputs.forEach(input => {
+      if (!input.id) return;
+      if (input.type === 'checkbox') {
+        data[input.id] = input.checked;
+      } else {
+        data[input.id] = input.value;
+      }
+    });
+
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  }
+
+  function checkDraftOnLoad() {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      document.getElementById('draftBanner').classList.remove('hidden');
+    }
+  }
+
+  function loadDraft() {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (!draft) return;
+
+    const data = JSON.parse(draft);
+    Object.keys(data).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (el.type === 'checkbox') {
+          el.checked = data[id];
+        } else {
+          el.value = data[id];
+        }
+      }
+    });
+
+    // Обновляем видимость блоков и подсветку дат
+    toggleResourceType();
+    toggleUntilDate();
+    document.querySelectorAll('.pov-date-input').forEach(input => validateVerificationDate(input));
+    
+    document.getElementById('draftBanner').classList.add('hidden');
+  }
+
+  function discardDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    document.getElementById('draftBanner').classList.add('hidden');
+  }
+
+  // Автосохранение при любом вводе
+  document.getElementById('actForm').addEventListener('input', saveDraft);
+  document.getElementById('actForm').addEventListener('change', saveDraft);
+
+  // ПОДТВЕРЖДЕНИЕ И ОТПРАВКА
+  function confirmAndSend() {
+    const actNum = document.getElementById('actNum').value.trim() || 'б/н';
+    const confirmMessage = `Отправить акт № ${actNum}?`;
+
+    if (tg.showConfirm) {
+      tg.showConfirm(confirmMessage, (ok) => {
+        if (ok) sendData();
+      });
+    } else {
+      if (confirm(confirmMessage)) {
+        sendData();
+      }
+    }
   }
 
   function sendData() {
@@ -829,10 +1083,13 @@
       inspectorFio: document.getElementById('inspectorFio').value
     };
 
+    // Очищаем черновик после успешной отправки
+    localStorage.removeItem(DRAFT_KEY);
+
     tg.sendData(JSON.stringify(formData));
   }
 
-  // Скрытие клавиатуры при прокрутке и клике вне полей
+  // Гашение клавиатуры
   window.addEventListener('touchmove', function() {
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
       document.activeElement.blur();
@@ -840,7 +1097,7 @@
   });
 
   document.addEventListener('click', function(event) {
-    const isInput = event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'BUTTON';
+    const isInput = event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'BUTTON' || event.target.closest('.chip');
     if (!isInput && document.activeElement) {
       document.activeElement.blur();
     }
