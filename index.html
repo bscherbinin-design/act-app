@@ -25,7 +25,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: var(--bg-color); 
       padding: 12px; 
-      padding-bottom: 65px; /* Компактный отступ под липкую кнопку */
+      padding-bottom: 65px;
       margin: 0; 
       color: var(--text-color); 
     }
@@ -120,7 +120,7 @@
       transform: scale(1.3); 
     }
 
-    /* Адаптивный и аккуратный баннер черновика */
+    /* Адаптивный баннер черновика */
     .draft-banner {
       background: var(--card-bg);
       border: 1px solid var(--accent-color);
@@ -150,7 +150,7 @@
     .btn-confirm { background: var(--accent-color); color: var(--button-text); }
     .btn-discard { background: transparent; color: var(--hint-color); border: 1px solid var(--border-color); }
 
-    /* Компактные кнопки быстрых шаблонов */
+    /* Компактные чипсы шаблонов */
     .template-chips {
       display: flex;
       flex-direction: column;
@@ -170,7 +170,7 @@
     }
     .chip:active { background: rgba(36, 161, 222, 0.15); }
 
-    /* Компактная липкая панель */
+    /* Липкая панель */
     .sticky-footer {
       position: fixed;
       bottom: 0;
@@ -183,6 +183,7 @@
       padding: 8px 12px;
       border-top: 1px solid var(--border-color);
       z-index: 999;
+      transition: opacity 0.2s, transform 0.2s;
     }
 
     .btn-submit { 
@@ -296,7 +297,7 @@
 
 <form id="actForm">
 
-  <!-- 1. ШАПКА АКТА -->
+  <!-- 1. ОБЩИЕ ДАННЫЕ -->
   <div class="card">
     <h3>1. Общие данные</h3>
     <div class="row">
@@ -304,7 +305,7 @@
       <div><label>Время</label><input type="time" id="actTime" required></div>
     </div>
     <div class="row">
-      <div><label>№ Акта</label><input type="text" id="actNum" placeholder="НО 12345" required></div>
+      <div><label>№ Акта</label><input type="text" id="actNum" inputmode="decimal" placeholder="НО 12345" required></div>
       <div>
         <label>Вид ресурса</label>
         <select id="resourceType" onchange="toggleResourceType()">
@@ -318,7 +319,7 @@
     <input type="text" id="consumer" placeholder="ООО Комфортный город">
     
     <div class="row">
-      <div><label>№ Договора</label><input type="text" id="docNum" placeholder="НФ00ТВ0000011047"></div>
+      <div><label>№ Договора</label><input type="text" id="docNum" inputmode="decimal" placeholder="НФ00ТВ0000011047"></div>
       <div>
         <label>Основание</label>
         <select id="reason">
@@ -377,20 +378,20 @@
         <label>Тип прибора</label>
         <input type="text" id="calcType" placeholder="Выберите..." readonly onclick="openPicker('calculators', 'calcType')">
       </div>
-      <div><label>Заводской №</label><input type="text" id="calcSn" placeholder="01670"></div>
+      <div><label>Заводской №</label><input type="text" id="calcSn" inputmode="decimal" placeholder="01670"></div>
     </div>
     
     <div class="row">
-      <div><label>Q (Гкал)</label><input type="number" step="0.001" id="calcQ" placeholder="0.94"></div>
-      <div><label>T раб. (ч)</label><input type="number" id="calcTrab" placeholder="2733"></div>
-      <div><label>T нешт. (ч)</label><input type="number" id="calcTnesht" placeholder="—"></div>
+      <div><label>Q (Гкал)</label><input type="number" step="0.001" id="calcQ" inputmode="decimal" placeholder="0.94"></div>
+      <div><label>T раб. (ч)</label><input type="number" id="calcTrab" inputmode="numeric" placeholder="2733"></div>
+      <div><label>T нешт. (ч)</label><input type="number" id="calcTnesht" inputmode="numeric" placeholder="—"></div>
     </div>
     <div class="row">
-      <div><label>Среднечас. Q (Гкал/ч)</label><input type="text" id="calcQavg" placeholder="—"></div>
+      <div><label>Среднечас. Q (Гкал/ч)</label><input type="text" id="calcQavg" inputmode="decimal" placeholder="—"></div>
       <div><label>Поверка (Аршин)</label><input type="date" id="calcPov" class="pov-date-input"></div>
     </div>
     <label>№ пломбы РСО</label>
-    <input type="text" id="calcSeal" placeholder="0037100">
+    <input type="text" id="calcSeal" inputmode="decimal" placeholder="0037100">
   </div>
 
   <!-- 3. РАСХОДОМЕРЫ (ПР) -->
@@ -403,16 +404,16 @@
         <label>Тип прибора</label>
         <input type="text" id="prInType" placeholder="Выберите..." readonly onclick="openPicker('flowmeters', 'prInType')">
       </div>
-      <div><label>Ду (мм)</label><input type="number" id="prInDu" placeholder="25"></div>
-      <div><label>Заводской №</label><input type="text" id="prInSn" placeholder="7255629"></div>
+      <div><label>Ду (мм)</label><input type="number" id="prInDu" inputmode="numeric" placeholder="25"></div>
+      <div><label>Заводской №</label><input type="text" id="prInSn" inputmode="decimal" placeholder="7255629"></div>
     </div>
     <div class="row">
-      <div><label>Нарастающий (м³)</label><input type="number" step="0.01" id="prInVal" placeholder="49"></div>
-      <div><label>Среднечас. (м³/ч)</label><input type="number" step="0.01" id="prInAvg" placeholder="0.48"></div>
+      <div><label>Нарастающий (м³)</label><input type="number" step="0.01" id="prInVal" inputmode="decimal" placeholder="49"></div>
+      <div><label>Среднечас. (м³/ч)</label><input type="number" step="0.01" id="prInAvg" inputmode="decimal" placeholder="0.48"></div>
     </div>
     <div class="row">
       <div><label>Поверка (Аршин)</label><input type="date" id="prInPov" class="pov-date-input"></div>
-      <div><label>№ пломбы РСО</label><input type="text" id="prInSeal" placeholder="0044666"></div>
+      <div><label>№ пломбы РСО</label><input type="text" id="prInSeal" inputmode="decimal" placeholder="0044666"></div>
     </div>
 
     <div id="prOutToggleGroup" class="toggle-group">
@@ -428,16 +429,16 @@
           <label>Тип прибора</label>
           <input type="text" id="prOutType" placeholder="Выберите..." readonly onclick="openPicker('flowmeters', 'prOutType')">
         </div>
-        <div><label>Ду (мм)</label><input type="number" id="prOutDu" placeholder="25"></div>
-        <div><label>Заводской №</label><input type="text" id="prOutSn" placeholder="7255544"></div>
+        <div><label>Ду (мм)</label><input type="number" id="prOutDu" inputmode="numeric" placeholder="25"></div>
+        <div><label>Заводской №</label><input type="text" id="prOutSn" inputmode="decimal" placeholder="7255544"></div>
       </div>
       <div class="row">
-        <div><label>Нарастающий (м³)</label><input type="number" step="0.01" id="prOutVal" placeholder="50"></div>
-        <div><label>Среднечас. (м³/ч)</label><input type="number" step="0.01" id="prOutAvg" placeholder="0.44"></div>
+        <div><label>Нарастающий (м³)</label><input type="number" step="0.01" id="prOutVal" inputmode="decimal" placeholder="50"></div>
+        <div><label>Среднечас. (м³/ч)</label><input type="number" step="0.01" id="prOutAvg" inputmode="decimal" placeholder="0.44"></div>
       </div>
       <div class="row">
         <div><label>Поверка (Аршин)</label><input type="date" id="prOutPov" class="pov-date-input"></div>
-        <div><label>№ пломбы РСО</label><input type="text" id="prOutSeal" placeholder="0044667"></div>
+        <div><label>№ пломбы РСО</label><input type="text" id="prOutSeal" inputmode="decimal" placeholder="0044667"></div>
       </div>
     </div>
   </div>
@@ -457,23 +458,23 @@
           <label>Тип комплекта</label>
           <input type="text" id="ktpType" placeholder="Выберите..." readonly onclick="openPicker('temperatures', 'ktpType')">
         </div>
-        <div><label>Зав. № (Подача)</label><input type="text" id="ktpInSn" placeholder="910"></div>
-        <div><label>Зав. № (Обр./Цирк.)</label><input type="text" id="ktpOutSn" placeholder="910 A"></div>
+        <div><label>Зав. № (Подача)</label><input type="text" id="ktpInSn" inputmode="decimal" placeholder="910"></div>
+        <div><label>Зав. № (Обр./Цирк.)</label><input type="text" id="ktpOutSn" inputmode="decimal" placeholder="910 A"></div>
       </div>
       <div class="row">
-        <div><label>Замер T под. (°C)</label><input type="number" step="0.1" id="ktpInT" placeholder="69"></div>
-        <div><label>Замер T обр./цирк. (°C)</label><input type="number" step="0.1" id="ktpOutT" placeholder="52"></div>
+        <div><label>Замер T под. (°C)</label><input type="number" step="0.1" id="ktpInT" inputmode="decimal" placeholder="69"></div>
+        <div><label>Замер T обр./цирк. (°C)</label><input type="number" step="0.1" id="ktpOutT" inputmode="decimal" placeholder="52"></div>
       </div>
       <div class="row">
-        <div><label>Среднечас. T под.</label><input type="number" step="0.1" id="ktpInTavg" placeholder="69"></div>
-        <div><label>Среднечас. T обр./цирк.</label><input type="number" step="0.1" id="ktpOutTavg" placeholder="52"></div>
+        <div><label>Среднечас. T под.</label><input type="number" step="0.1" id="ktpInTavg" inputmode="decimal" placeholder="69"></div>
+        <div><label>Среднечас. T обр./цирк.</label><input type="number" step="0.1" id="ktpOutTavg" inputmode="decimal" placeholder="52"></div>
       </div>
       <div class="row">
         <div><label>Поверка (Аршин)</label><input type="date" id="ktpPov" class="pov-date-input"></div>
       </div>
       <div class="row">
-        <div><label>Пломба РСО (Под.)</label><input type="text" id="ktpInSeal" placeholder="0044668"></div>
-        <div><label>Пломба РСО (Обр./Цирк.)</label><input type="text" id="ktpOutSeal" placeholder="0044669"></div>
+        <div><label>Пломба РСО (Под.)</label><input type="text" id="ktpInSeal" inputmode="decimal" placeholder="0044668"></div>
+        <div><label>Пломба РСО (Обр./Цирк.)</label><input type="text" id="ktpOutSeal" inputmode="decimal" placeholder="0044669"></div>
       </div>
     </div>
   </div>
@@ -487,8 +488,8 @@
     
     <h4>Вес импульса в тепловычислителе (м³/имп)</h4>
     <div class="row">
-      <div><label>Подающий трубопровод</label><input type="text" id="impCalcIn" placeholder="0.001"></div>
-      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Циркуляционный трубопровод</label><input type="text" id="impCalcOut" placeholder="0.001"></div>
+      <div><label>Подающий трубопровод</label><input type="text" id="impCalcIn" inputmode="decimal" placeholder="0.001"></div>
+      <div id="impCalcOutGroup"><label id="lblImpCalcOut">Циркуляционный трубопровод</label><input type="text" id="impCalcOut" inputmode="decimal" placeholder="0.001"></div>
     </div>
   </div>
 
@@ -508,12 +509,12 @@
           <label>Тип</label>
           <input type="text" id="pressInType" placeholder="Выберите..." readonly onclick="openPicker('pressures', 'pressInType')">
         </div>
-        <div><label>Зав. №</label><input type="text" id="pressInSn" placeholder="245310"></div>
+        <div><label>Зав. №</label><input type="text" id="pressInSn" inputmode="decimal" placeholder="245310"></div>
       </div>
       <div class="row">
         <div><label>Поверка</label><input type="date" id="pressInPov" class="pov-date-input"></div>
-        <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="pressInVal" placeholder="6.1"></div>
-        <div><label>Пломба</label><input type="text" id="pressInSeal" placeholder="0044670"></div>
+        <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="pressInVal" inputmode="decimal" placeholder="6.1"></div>
+        <div><label>Пломба</label><input type="text" id="pressInSeal" inputmode="decimal" placeholder="0044670"></div>
       </div>
 
       <div id="pressOutGroup">
@@ -524,12 +525,12 @@
             <label>Тип</label>
             <input type="text" id="pressOutType" placeholder="Выберите..." readonly onclick="openPicker('pressures', 'pressOutType')">
           </div>
-          <div><label>Зав. №</label><input type="text" id="pressOutSn" placeholder="245366"></div>
+          <div><label>Зав. №</label><input type="text" id="pressOutSn" inputmode="decimal" placeholder="245366"></div>
         </div>
         <div class="row">
           <div><label>Поверка</label><input type="date" id="pressOutPov" class="pov-date-input"></div>
-          <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="pressOutVal" placeholder="6.1"></div>
-          <div><label>Пломба</label><input type="text" id="pressOutSeal" placeholder="0044661"></div>
+          <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="pressOutVal" inputmode="decimal" placeholder="6.1"></div>
+          <div><label>Пломба</label><input type="text" id="pressOutSeal" inputmode="decimal" placeholder="0044661"></div>
         </div>
       </div>
     </div>
@@ -549,12 +550,12 @@
             <label>Тип ПР подпитки</label>
             <input type="text" id="makeUpType" placeholder="Выберите..." readonly onclick="openPicker('flowmeters', 'makeUpType')">
           </div>
-          <div><label>Зав. №</label><input type="text" id="makeUpSn"></div>
+          <div><label>Зав. №</label><input type="text" id="makeUpSn" inputmode="decimal"></div>
         </div>
         <div class="row">
           <div><label>Поверка</label><input type="date" id="makeUpPov" class="pov-date-input"></div>
-          <div><label>Показания (м³)</label><input type="number" step="0.01" id="makeUpVal"></div>
-          <div><label>Пломба РСО</label><input type="text" id="makeUpSeal"></div>
+          <div><label>Показания (м³)</label><input type="number" step="0.01" id="makeUpVal" inputmode="decimal"></div>
+          <div><label>Пломба РСО</label><input type="text" id="makeUpSeal" inputmode="decimal"></div>
         </div>
 
         <div class="toggle-group" style="margin-top: 8px;">
@@ -567,12 +568,12 @@
               <label>Тип прибора</label>
               <input type="text" id="makeUpPressType" placeholder="Выберите..." readonly onclick="openPicker('pressures', 'makeUpPressType')">
             </div>
-            <div><label>Зав. №</label><input type="text" id="makeUpPressSn"></div>
+            <div><label>Зав. №</label><input type="text" id="makeUpPressSn" inputmode="decimal"></div>
           </div>
           <div class="row">
-            <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="makeUpPressVal" placeholder="4.0"></div>
+            <div><label>Показания (кгс/см²)</label><input type="number" step="0.1" id="makeUpPressVal" inputmode="decimal" placeholder="4.0"></div>
             <div><label>Поверка</label><input type="date" id="makeUpPressPov" class="pov-date-input"></div>
-            <div><label>Пломба</label><input type="text" id="makeUpPressSeal"></div>
+            <div><label>Пломба</label><input type="text" id="makeUpPressSeal" inputmode="decimal"></div>
           </div>
         </div>
 
@@ -586,12 +587,12 @@
               <label>Тип прибора</label>
               <input type="text" id="makeUpTempType" placeholder="Выберите..." readonly onclick="openPicker('temperatures', 'makeUpTempType')">
             </div>
-            <div><label>Зав. №</label><input type="text" id="makeUpTempSn"></div>
+            <div><label>Зав. №</label><input type="text" id="makeUpTempSn" inputmode="decimal"></div>
           </div>
           <div class="row">
-            <div><label>Замер T (°C)</label><input type="number" step="0.1" id="makeUpTempVal" placeholder="15"></div>
+            <div><label>Замер T (°C)</label><input type="number" step="0.1" id="makeUpTempVal" inputmode="decimal" placeholder="15"></div>
             <div><label>Поверка</label><input type="date" id="makeUpTempPov" class="pov-date-input"></div>
-            <div><label>Пломба</label><input type="text" id="makeUpTempSeal"></div>
+            <div><label>Пломба</label><input type="text" id="makeUpTempSeal" inputmode="decimal"></div>
           </div>
         </div>
       </div>
@@ -624,7 +625,7 @@
 
 </form>
 
-<!-- КОМПАКТНАЯ ЛИПКАЯ КНОПКА ОТПРАВКИ -->
+<!-- ЛИПКАЯ КНОПКА ОТПРАВКИ -->
 <div class="sticky-footer">
   <button type="button" class="btn-submit" onclick="confirmAndSend()">Сформировать и отправить акт</button>
 </div>
@@ -854,6 +855,7 @@
     document.getElementById('calcSection').classList.toggle('hidden', isHvs);
     document.getElementById('schemeSection').classList.toggle('hidden', isHvs);
 
+    // Управление расходомерами
     document.getElementById('prOutToggleGroup').classList.toggle('hidden', isHvs);
     if (isHvs) {
       document.getElementById('hasPrOut').checked = false;
@@ -862,8 +864,27 @@
     }
     togglePrOut();
 
-    document.getElementById('tempSection').classList.toggle('hidden', isHvs);
+    // Управление термопреобразователями
+    const tempSection = document.getElementById('tempSection');
+    const tempToggleGroup = document.getElementById('tempToggleGroup');
+    const hasTempCheckbox = document.getElementById('hasTemp');
+
+    if (isHvs) {
+      tempSection.classList.add('hidden');
+    } else if (isHeat) {
+      // Для Тепла ТП ОБЯЗАТЕЛЬНЫ: включаем, показываем секцию и скрываем чекбокс
+      tempSection.classList.remove('hidden');
+      hasTempCheckbox.checked = true;
+      tempToggleGroup.classList.add('hidden');
+      toggleTemp();
+    } else {
+      // Для ГВС оставляем возможность отключать
+      tempSection.classList.remove('hidden');
+      tempToggleGroup.classList.remove('hidden');
+      toggleTemp();
+    }
     
+    // Блок подпитки только для Тепла
     const makeUpToggleGroup = document.getElementById('makeUpMainToggleGroup');
     if (isHeat) {
       makeUpToggleGroup.classList.remove('hidden');
@@ -1081,7 +1102,21 @@
     tg.sendData(JSON.stringify(formData));
   }
 
-  // Гашение клавиатуры
+  // СКРЫТИЕ ЛИПКОЙ ПАНЕЛИ ПРИ ОТКРЫТИИ КЛАВИАТУРЫ
+  if (window.visualViewport) {
+    const stickyFooter = document.querySelector('.sticky-footer');
+    
+    window.visualViewport.addEventListener('resize', () => {
+      const isKeyboardOpen = window.visualViewport.height < window.innerHeight - 150;
+      if (isKeyboardOpen) {
+        stickyFooter.classList.add('hidden');
+      } else {
+        stickyFooter.classList.remove('hidden');
+      }
+    });
+  }
+
+  // Гашение клавиатуры при прокрутке и клике вне полей
   window.addEventListener('touchmove', function() {
     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
       document.activeElement.blur();
@@ -1102,22 +1137,6 @@
       }
     });
   });
-
-  // Скрытие липкой кнопки при открытии виртуальной клавиатуры
-  if (window.visualViewport) {
-    const stickyFooter = document.querySelector('.sticky-footer');
-    
-    window.visualViewport.addEventListener('resize', () => {
-      // Если высота видимой области уменьшилась более чем на 150px — значит, открыта клавиатура
-      const isKeyboardOpen = window.visualViewport.height < window.innerHeight - 150;
-      
-      if (isKeyboardOpen) {
-        stickyFooter.classList.add('hidden');
-      } else {
-        stickyFooter.classList.remove('hidden');
-      }
-    });
-  }
 </script>
 </body>
 </html>
