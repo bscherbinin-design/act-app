@@ -1102,6 +1102,22 @@
       }
     });
   });
+
+  // Скрытие липкой кнопки при открытии виртуальной клавиатуры
+  if (window.visualViewport) {
+    const stickyFooter = document.querySelector('.sticky-footer');
+    
+    window.visualViewport.addEventListener('resize', () => {
+      // Если высота видимой области уменьшилась более чем на 150px — значит, открыта клавиатура
+      const isKeyboardOpen = window.visualViewport.height < window.innerHeight - 150;
+      
+      if (isKeyboardOpen) {
+        stickyFooter.classList.add('hidden');
+      } else {
+        stickyFooter.classList.remove('hidden');
+      }
+    });
+  }
 </script>
 </body>
 </html>
