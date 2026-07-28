@@ -806,32 +806,34 @@
     document.getElementById('pickerModal').classList.remove('active');
   }
 
-  // ПРИМЕНЕНИЕ БЫСТРЫХ ШАБЛОНОВ
-  function applyTemplate(type) {
-    if (type === 'spt_prem') {
-      document.getElementById('calcType').value = 'СПТ-941.2';
-      document.getElementById('prInType').value = 'ПРЭM';
-      document.getElementById('prOutType').value = 'ПРЭM';
-      document.getElementById('ktpType').value = 'КТПТР-01';
-      document.getElementById('pressInType').value = 'СДВ-И';
-      document.getElementById('pressOutType').value = 'СДВ-И';
-    } else if (type === 'vkt_veps') {
-      document.getElementById('calcType').value = 'ВКТ-7';
-      document.getElementById('prInType').value = 'ВЭПС';
-      document.getElementById('prOutType').value = 'ВЭПС';
-      document.getElementById('ktpType').value = 'КТСПР-001';
-      document.getElementById('pressInType').value = 'MIDA-13P';
-      document.getElementById('pressOutType').value = 'MIDA-13P';
-    } else if (type === 'vzlet') {
-      document.getElementById('calcType').value = 'Взлет ТСРВ-024M';
-      document.getElementById('prInType').value = 'ЭРСВ-420L';
-      document.getElementById('prOutType').value = 'ЭРСВ-420L';
-      document.getElementById('ktpType').value = 'КСПТ';
-      document.getElementById('pressInType').value = 'ПД-1';
-      document.getElementById('pressOutType').value = 'ПД-1';
-    }
-    saveDraft();
+ // ПРИМЕНЕНИЕ БЫСТРЫХ ШАБЛОНОВ
+function applyTemplate(type) {
+  if (type === 'vzlet_024m') {
+    // 1. Взлет ТСРВ-024М + ЭРСВ-440ЛВ (2х) + Взлет ТПС
+    document.getElementById('calcType').value = 'Взлет ТСРВ-024M';
+    
+    document.getElementById('prInType').value = 'ЭРСВ-440ЛВ';
+    document.getElementById('prOutType').value = 'ЭРСВ-440ЛВ';
+    
+    document.getElementById('hasTemp').checked = true;
+    toggleTemp(); // Обновляем видимость блока ТП
+    document.getElementById('ktpType').value = 'ТСП-N'; // или 'КСПТ' (укажите марку ТПС, как она записана в вашем списке)
+
+  } else if (type === 'spt_944') {
+    // 2. СПТ-944 + ВЭПС (2х) + КТПТР-01
+    document.getElementById('calcType').value = 'СПТ-944';
+    
+    document.getElementById('prInType').value = 'ВЭПС';
+    document.getElementById('prOutType').value = 'ВЭПС';
+    
+    document.getElementById('hasTemp').checked = true;
+    toggleTemp(); // Обновляем видимость блока ТП
+    document.getElementById('ktpType').value = 'КТПТР-01';
   }
+
+  // Сохраняем обновленный черновик
+  saveDraft();
+}
 
   function formatDate(rawDate) {
     if (!rawDate) return '';
