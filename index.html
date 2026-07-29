@@ -77,6 +77,50 @@
       transition: border-color 0.2s, background-color 0.2s;
     }
 
+    /*
+      Обёртка и кнопка-переключатель для полей-пикеров.
+      Эта стилизация делает следующее:
+      - помещает поле в контейнер с относительным позиционированием (`.picker-wrapper`),
+        чтобы можно было абсолютно позиционировать кнопку внутри этого контейнера;
+      - `.picker-toggle` — небольшая иконка-кунопка справа внутри поля, которая
+        видна только в режиме ручного ввода и служит для возврата в режим выбора
+        производителя/модели (открывает модальное окно и прячет себя);
+      - класс `.hidden` скрывает кнопку полностью (используется по умолчанию).
+    */
+    .picker-wrapper { position: relative; }
+    .picker-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--accent-color);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .picker-toggle.hidden { display: none !important; }
+
+    /* Прогресс-бар заполнения формы */
+    #progressBar {
+      position: fixed;
+      top: 0; left: 0; height: 4px;
+      background: var(--accent-color);
+      width: 0%;
+      transition: width 0.3s ease;
+      z-index: 1001;
+    }
+
+    /* Подсказка о статусе поверки */
+    .pov-hint {
+      font-size: 11px;
+      margin-top: 2px;
+      color: var(--hint-color);
+      font-style: italic;
+    }
+
     input:focus, select:focus { 
       border-color: var(--accent-color); 
       outline: none; 
@@ -286,6 +330,7 @@
   </style>
 </head>
 <body>
+  <div id="progressBar"></div>
 
 <div id="draftBanner" class="draft-banner hidden">
   <span>Найден сохраненный черновик</span>
@@ -672,9 +717,26 @@
 
     if (selectedDate < today) {
       input.classList.add('expired-date');
+      // Добавляем подсказку с количеством просроченных дней
+      const diffDays = Math.ceil((today - selectedDate) / (1000 * 60 * 60 * 24));
+      updatePovHint(input, `Просрочено на ${diffDays} дн.`);
     } else {
       input.classList.remove('expired-date');
+      // Если дата в будущем или сегодня — показываем остаток
+      const futureDays = Math.ceil((selectedDate - today) / (1000 * 60 * 60 * 24));
+      updatePovHint(input, `Осталось ${futureDays} дн.`);
     }
+  }
+
+  // Вспомогательная функция для обновления или создания текста подсказки
+  function updatePovHint(input, text) {
+    let hint = input.parentNode.querySelector('.pov-hint');
+    if (!hint) {
+      hint = document.createElement('div');
+      hint.className = 'pov-hint';
+      input.parentNode.appendChild(hint);
+    }
+    hint.innerText = text;
   }
 
   // БАЗА ОБОРУДОВАНИЯ
@@ -724,6 +786,77 @@
     document.getElementById('pickerModal').classList.add('active');
   }
 
+  // Улучшение полей-пикеров: добавляет кнопку-иконку рядом с полем
+  //
+  // enhancePickers()
+  // Обход всех полей ввода, которые используют `openPicker(category, id)` в
+  // атрибуте `onclick` и расширение их функциональности:
+  // - оборачивает поле в контейнер `.picker-wrapper` для корректного позиционирования
+  //   кнопки-переключателя;
+  // - добавляет кнопку-переключатель `.picker-toggle` (иконка `📋`), которая скрыта
+  //   по умолчанию и становится видимой когда пользователь переводит поле в ручной
+  //   режим ввода через пункт модального окна "Ввести название вручную";
+  // - вместо удаления обработчика `onclick` при входе в ручной режим мы помечаем
+  //   поле флагом `data-manual = 'true'`. Это позволяет пользователю вернуться в
+  //   режим выбора, нажав на добавленную кнопку-переключатель — кнопка восстановит
+  //   поведение открытия модального окна и откроет его сразу;
+  // - все изменения аккуратно используют `data-` атрибуты (`data-category`,
+  //   `data-manual`, `data-enhanced`) чтобы не ломать существующую логику и
+  //   сохранить совместимость с автосохранением/черновиками.
+  function enhancePickers() {
+    const inputs = Array.from(document.querySelectorAll('input[id]'));
+    inputs.forEach(input => {
+      // Ищем только те input, у которых в атрибуте onclick вызов openPicker(...)
+      if (!input.getAttribute('onclick')) return;
+      const onclick = input.getAttribute('onclick');
+      const m = onclick.match(/openPicker\('([^']+)'\s*,\s*'([^']+)'\)/);
+      if (!m) return;
+      const category = m[1];
+      const id = input.id;
+      if (input.dataset.enhanced === '1') return;
+
+      // Сохраняем метаданные на элементе: категорию и флаг ручного ввода
+      input.dataset.category = category;
+      input.dataset.manual = 'false';
+
+      // Создаём обёртку, чтобы разместить кнопку внутри границ поля
+      const wrapper = document.createElement('div');
+      wrapper.className = 'picker-wrapper';
+      input.parentNode.replaceChild(wrapper, input);
+      wrapper.appendChild(input);
+
+      // Кнопка-переключатель, скрытая по умолчанию. При ручном вводе её показываем
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = id + '_pickerBtn';
+      btn.className = 'picker-toggle hidden';
+      btn.title = 'Вернуться к выбору шаблона';
+      btn.innerText = '📋';
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        // Снимаем ручной флаг, восстанавливаем readonly и поведение открытия
+        input.dataset.manual = 'false';
+        input.setAttribute('readonly', 'readonly');
+        const cat = input.dataset.category;
+        input.onclick = function() { openPicker(cat, id); };
+        btn.classList.add('hidden');
+        // Немедленно открываем модальное окно для быстрого выбора
+        openPicker(cat, id);
+      };
+      wrapper.appendChild(btn);
+
+      // Заменяем исходный onclick: если в ручном режиме — игнорируем клик,
+      // иначе — открываем модальный селектор. Это предотвращает полное удаление
+      // исходного обработчика, сохраняя возможность возвращения к выбору.
+      input.onclick = function() {
+        if (input.dataset.manual === 'true') return;
+        openPicker(input.dataset.category, id);
+      };
+
+      input.dataset.enhanced = '1';
+    });
+  }
+
   function renderBrands() {
     modalState = 'brands';
     document.getElementById('modalTitle').innerText = "Шаг 1: Выберите производителя";
@@ -734,11 +867,22 @@
     manualItem.className = 'modal-item';
     manualItem.style.color = 'var(--accent-color)';
     manualItem.innerText = "✍️ Ввести название вручную";
+    /*
+      Обработчик "Ввести название вручную":
+      - не удаляет навсегда `onclick` у поля;
+      - переводит поле в ручной режим через `data-manual = 'true'`;
+      - снимает атрибут `readonly`, очищает значение и ставит фокус;
+      - отображает кнопку-переключатель (если она была создана функции `enhancePickers`),
+        чтобы пользователь мог вернуться в режим выбора одним нажатием.
+    */
     manualItem.onclick = function() {
       closePicker();
       const input = document.getElementById(activeTargetInputId);
+      if (!input) return;
+      input.dataset.manual = 'true';
       input.removeAttribute('readonly');
-      input.onclick = null;
+      const btn = document.getElementById(input.id + '_pickerBtn');
+      if (btn) btn.classList.remove('hidden');
       input.value = '';
       setTimeout(() => input.focus(), 100);
     };
@@ -779,11 +923,23 @@
       item.className = 'modal-item';
       item.setAttribute('data-search-text', model.toLowerCase());
       item.innerText = model;
+      /*
+        Обработчик выбора модели:
+        - устанавливает выбранную модель в поле;
+        - возвращает поле в режим readonly и снимает флаг ручного ввода (`data-manual`);
+        - скрывает кнопку-переключатель (если она есть);
+        - сохраняет черновик и закрывает модальное окно.
+        Важно: не стираем навсегда исходный `onclick` — он поддерживается
+        через логику `enhancePickers` и/или повторно устанавливается кнопкой.
+      */
       item.onclick = function() {
         const input = document.getElementById(activeTargetInputId);
+        if (!input) return;
         input.value = model;
         input.setAttribute('readonly', 'readonly');
-        input.onclick = function() { openPicker(currentCategory, activeTargetInputId); };
+        input.dataset.manual = 'false';
+        const btn = document.getElementById(input.id + '_pickerBtn');
+        if (btn) btn.classList.add('hidden');
         saveDraft();
         closePicker();
       };
@@ -810,10 +966,25 @@
     document.getElementById('pickerModal').classList.remove('active');
   }
 
+  // Инициализация улучшений после загрузки DOM
+  document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация:
+    // - пытаемся обогатить поля-пикеры кнопками и обёртками;
+    // - обёртка/кнопка создаётся только для тех input, которые изначально
+    //   использовали `openPicker(...)` в атрибуте `onclick`.
+    try {
+      enhancePickers();
+    } catch (e) {
+      // Если по какой-то причине инициализация не удалась,
+      // логируем предупреждение, но не ломаем остальную логику приложения.
+      console.warn('enhancePickers failed', e);
+    }
+  });
+
   // ПРИМЕНЕНИЕ БЫСТРЫХ ШАБЛОНОВ
   function applyTemplate(type) {
     if (type === 'vzlet_024m') {
-      document.getElementById('calcType').value = 'Взлет ТСРВ-024M';
+      document.getElementById('calcType').value = 'Взлет ТСРВ-024М';
       document.getElementById('prInType').value = 'ЭРСВ-440ЛВ';
       document.getElementById('prOutType').value = 'ЭРСВ-440ЛВ';
       document.getElementById('hasTemp').checked = true;
@@ -839,6 +1010,11 @@
       return `${day}.${month}.${year} г.`;
     }
     return rawDate;
+  }
+
+  // Функция для замены пустых значений на прочерк
+  function formatValue(value) {
+    return (value && value.toString().trim() !== '') ? value : "—";
   }
 
   function toggleUntilDate() {
@@ -944,6 +1120,22 @@
     });
 
     localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    updateProgress(); // Обновляем прогресс при каждом сохранении
+  }
+
+  // Обновление прогресс-бара
+  function updateProgress() {
+    const form = document.getElementById('actForm');
+    const inputs = Array.from(form.querySelectorAll('input, select'));
+    // Считаем заполненные поля (исключая чекбоксы и кнопки, только важные данные)
+    const total = inputs.filter(i => i.type !== 'checkbox' && i.type !== 'button').length;
+    const filled = inputs.filter(i => i.type !== 'checkbox' && i.type !== 'button' && i.value.trim() !== '').length;
+    
+    const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+      progressBar.style.width = percent + '%';
+    }
   }
 
   function checkDraftOnLoad() {
@@ -1006,96 +1198,96 @@
     const untilDateValue = isMpi ? "до окончания срока МПИ" : formatDate(rawStatusUntilDate);
 
     const formData = {
-      actDate: formatDate(document.getElementById('actDate').value),
-      actTime: document.getElementById('actTime').value,
-      actNum: document.getElementById('actNum').value,
-      resourceType: document.getElementById('resourceType').value,
-      consumer: document.getElementById('consumer').value,
-      docNum: document.getElementById('docNum').value,
-      reason: document.getElementById('reason').value,
-      address: document.getElementById('address').value,
-      consumerRep: document.getElementById('consumerRep').value,
+      actDate: formatValue(formatDate(document.getElementById('actDate').value)),
+      actTime: formatValue(document.getElementById('actTime').value),
+      actNum: formatValue(document.getElementById('actNum').value),
+      resourceType: formatValue(document.getElementById('resourceType').value),
+      consumer: formatValue(document.getElementById('consumer').value),
+      docNum: formatValue(document.getElementById('docNum').value),
+      reason: formatValue(document.getElementById('reason').value),
+      address: formatValue(document.getElementById('address').value),
+      consumerRep: formatValue(document.getElementById('consumerRep').value),
 
-      calcType: document.getElementById('calcType').value,
-      calcSn: document.getElementById('calcSn').value,
-      calcQ: document.getElementById('calcQ').value,
-      calcTrab: document.getElementById('calcTrab').value,
-      calcTnesht: document.getElementById('calcTnesht').value,
-      calcQavg: document.getElementById('calcQavg').value,
-      calcPov: formatDate(document.getElementById('calcPov').value),
-      calcSeal: document.getElementById('calcSeal').value,
+      calcType: formatValue(document.getElementById('calcType').value),
+      calcSn: formatValue(document.getElementById('calcSn').value),
+      calcQ: formatValue(document.getElementById('calcQ').value),
+      calcTrab: formatValue(document.getElementById('calcTrab').value),
+      calcTnesht: formatValue(document.getElementById('calcTnesht').value),
+      calcQavg: formatValue(document.getElementById('calcQavg').value),
+      calcPov: formatValue(formatDate(document.getElementById('calcPov').value)),
+      calcSeal: formatValue(document.getElementById('calcSeal').value),
 
-      prInType: document.getElementById('prInType').value,
-      prInDu: document.getElementById('prInDu').value,
-      prInSn: document.getElementById('prInSn').value,
-      prInVal: document.getElementById('prInVal').value,
-      prInAvg: document.getElementById('prInAvg').value,
-      prInPov: formatDate(document.getElementById('prInPov').value),
-      prInSeal: document.getElementById('prInSeal').value,
+      prInType: formatValue(document.getElementById('prInType').value),
+      prInDu: formatValue(document.getElementById('prInDu').value),
+      prInSn: formatValue(document.getElementById('prInSn').value),
+      prInVal: formatValue(document.getElementById('prInVal').value),
+      prInAvg: formatValue(document.getElementById('prInAvg').value),
+      prInPov: formatValue(formatDate(document.getElementById('prInPov').value)),
+      prInSeal: formatValue(document.getElementById('prInSeal').value),
 
       hasPrOut: document.getElementById('hasPrOut').checked,
-      prOutType: document.getElementById('prOutType').value,
-      prOutDu: document.getElementById('prOutDu').value,
-      prOutSn: document.getElementById('prOutSn').value,
-      prOutVal: document.getElementById('prOutVal').value,
-      prOutAvg: document.getElementById('prOutAvg').value,
-      prOutPov: formatDate(document.getElementById('prOutPov').value),
-      prOutSeal: document.getElementById('prOutSeal').value,
+      prOutType: formatValue(document.getElementById('prOutType').value),
+      prOutDu: formatValue(document.getElementById('prOutDu').value),
+      prOutSn: formatValue(document.getElementById('prOutSn').value),
+      prOutVal: formatValue(document.getElementById('prOutVal').value),
+      prOutAvg: formatValue(document.getElementById('prOutAvg').value),
+      prOutPov: formatValue(formatDate(document.getElementById('prOutPov').value)),
+      prOutSeal: formatValue(document.getElementById('prOutSeal').value),
 
       hasTemp: document.getElementById('hasTemp').checked,
-      ktpType: document.getElementById('ktpType').value,
-      ktpInSn: document.getElementById('ktpInSn').value,
-      ktpOutSn: document.getElementById('ktpOutSn').value,
-      ktpInT: document.getElementById('ktpInT').value,
-      ktpOutT: document.getElementById('ktpOutT').value,
-      ktpInTavg: document.getElementById('ktpInTavg').value,
-      ktpOutTavg: document.getElementById('ktpOutTavg').value,
-      ktpPov: formatDate(document.getElementById('ktpPov').value),
-      ktpInSeal: document.getElementById('ktpInSeal').value,
-      ktpOutSeal: document.getElementById('ktpOutSeal').value,
+      ktpType: formatValue(document.getElementById('ktpType').value),
+      ktpInSn: formatValue(document.getElementById('ktpInSn').value),
+      ktpOutSn: formatValue(document.getElementById('ktpOutSn').value),
+      ktpInT: formatValue(document.getElementById('ktpInT').value),
+      ktpOutT: formatValue(document.getElementById('ktpOutT').value),
+      ktpInTavg: formatValue(document.getElementById('ktpInTavg').value),
+      ktpOutTavg: formatValue(document.getElementById('ktpOutTavg').value),
+      ktpPov: formatValue(formatDate(document.getElementById('ktpPov').value)),
+      ktpInSeal: formatValue(document.getElementById('ktpInSeal').value),
+      ktpOutSeal: formatValue(document.getElementById('ktpOutSeal').value),
 
-      schemeFormula: document.getElementById('schemeFormula').value,
-      impCalcIn: document.getElementById('impCalcIn').value,
-      impCalcOut: document.getElementById('impCalcOut').value,
+      schemeFormula: formatValue(document.getElementById('schemeFormula').value),
+      impCalcIn: formatValue(document.getElementById('impCalcIn').value),
+      impCalcOut: formatValue(document.getElementById('impCalcOut').value),
 
       hasPressure: document.getElementById('hasPressure').checked,
-      pressInType: document.getElementById('pressInType').value,
-      pressInSn: document.getElementById('pressInSn').value,
-      pressInPov: formatDate(document.getElementById('pressInPov').value),
-      pressInVal: document.getElementById('pressInVal').value,
-      pressInSeal: document.getElementById('pressInSeal').value,
+      pressInType: formatValue(document.getElementById('pressInType').value),
+      pressInSn: formatValue(document.getElementById('pressInSn').value),
+      pressInPov: formatValue(formatDate(document.getElementById('pressInPov').value)),
+      pressInVal: formatValue(document.getElementById('pressInVal').value),
+      pressInSeal: formatValue(document.getElementById('pressInSeal').value),
 
-      pressOutType: document.getElementById('pressOutType').value,
-      pressOutSn: document.getElementById('pressOutSn').value,
-      pressOutPov: formatDate(document.getElementById('pressOutPov').value),
-      pressOutVal: document.getElementById('pressOutVal').value,
-      pressOutSeal: document.getElementById('pressOutSeal').value,
+      pressOutType: formatValue(document.getElementById('pressOutType').value),
+      pressOutSn: formatValue(document.getElementById('pressOutSn').value),
+      pressOutPov: formatValue(formatDate(document.getElementById('pressOutPov').value)),
+      pressOutVal: formatValue(document.getElementById('pressOutVal').value),
+      pressOutSeal: formatValue(document.getElementById('pressOutSeal').value),
 
       hasMakeUp: document.getElementById('hasMakeUp').checked,
-      makeUpType: document.getElementById('makeUpType').value,
-      makeUpSn: document.getElementById('makeUpSn').value,
-      makeUpPov: formatDate(document.getElementById('makeUpPov').value),
-      makeUpVal: document.getElementById('makeUpVal').value,
-      makeUpSeal: document.getElementById('makeUpSeal').value,
+      makeUpType: formatValue(document.getElementById('makeUpType').value),
+      makeUpSn: formatValue(document.getElementById('makeUpSn').value),
+      makeUpPov: formatValue(formatDate(document.getElementById('makeUpPov').value)),
+      makeUpVal: formatValue(document.getElementById('makeUpVal').value),
+      makeUpSeal: formatValue(document.getElementById('makeUpSeal').value),
 
       hasMakeUpPress: document.getElementById('hasMakeUpPress').checked,
-      makeUpPressType: document.getElementById('makeUpPressType').value,
-      makeUpPressSn: document.getElementById('makeUpPressSn').value,
-      makeUpPressVal: document.getElementById('makeUpPressVal').value,
-      makeUpPressPov: formatDate(document.getElementById('makeUpPressPov').value),
-      makeUpPressSeal: document.getElementById('makeUpPressSeal').value,
+      makeUpPressType: formatValue(document.getElementById('makeUpPressType').value),
+      makeUpPressSn: formatValue(document.getElementById('makeUpPressSn').value),
+      makeUpPressVal: formatValue(document.getElementById('makeUpPressVal').value),
+      makeUpPressPov: formatValue(formatDate(document.getElementById('makeUpPressPov').value)),
+      makeUpPressSeal: formatValue(document.getElementById('makeUpPressSeal').value),
 
       hasMakeUpTemp: document.getElementById('hasMakeUpTemp').checked,
-      makeUpTempType: document.getElementById('makeUpTempType').value,
-      makeUpTempSn: document.getElementById('makeUpTempSn').value,
-      makeUpTempVal: document.getElementById('makeUpTempVal').value,
-      makeUpTempPov: formatDate(document.getElementById('makeUpTempPov').value),
-      makeUpTempSeal: document.getElementById('makeUpTempSeal').value,
+      makeUpTempType: formatValue(document.getElementById('makeUpTempType').value),
+      makeUpTempSn: formatValue(document.getElementById('makeUpTempSn').value),
+      makeUpTempVal: formatValue(document.getElementById('makeUpTempVal').value),
+      makeUpTempPov: formatValue(formatDate(document.getElementById('makeUpTempPov').value)),
+      makeUpTempSeal: formatValue(document.getElementById('makeUpTempSeal').value),
 
-      status: document.getElementById('status').value,
-      statusUntilDate: untilDateValue,
-      inspectorPost: document.getElementById('inspectorPost').value,
-      inspectorFio: document.getElementById('inspectorFio').value
+      status: formatValue(document.getElementById('status').value),
+      statusUntilDate: formatValue(untilDateValue),
+      inspectorPost: formatValue(document.getElementById('inspectorPost').value),
+      inspectorFio: formatValue(document.getElementById('inspectorFio').value)
     };
 
     localStorage.removeItem(DRAFT_KEY);
