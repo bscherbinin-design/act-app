@@ -327,9 +327,42 @@
     .modal-item:active {
       background: rgba(36, 161, 222, 0.15);
     }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .theme-switch { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--hint-color); }
+    .offline-indicator { font-size: 12px; color: crimson; }
+    .hint-icon { margin-left: 8px; font-size: 12px; cursor: help; }
+
+    /* Тёмная тема — переключение через класс на body */
+    .dark-theme {
+      --bg-color: #0f1720;
+      --card-bg: #0b1220;
+      --text-color: #e5e7eb;
+      --hint-color: #9ca3af;
+      --accent-color: #3b82f6;
+      --button-text: #ffffff;
+      --input-bg: #08101a;
+      --border-color: rgba(255,255,255,0.06);
+      --error-color: #ff6b6b;
+      --error-bg: rgba(255,107,107,0.08);
+    }
   </style>
 </head>
 <body>
+  <div class="top-bar">
+    <div class="theme-control">
+      <label class="theme-switch">
+        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+        <span>Тёмная тема</span>
+      </label>
+    </div>
+    <div id="networkIndicator" class="offline-indicator" title="Статус сети">● offline</div>
+  </div>
   <div id="progressBar"></div>
 
 <div id="draftBanner" class="draft-banner hidden">
@@ -376,30 +409,31 @@
     </div>
     
     <label>Адрес объекта</label>
-    <input type="text" id="address" list="streetList" value="г. Ноябрьск, ул. " placeholder="г. Ноябрьск, ул. Новоселов, д. 4" required>
+    <input type="text" id="address" list="streetList" placeholder="г. Ноябрьск, ул. " required>
     <datalist id="streetList">
-      <option value="г. Ноябрьск, ул. Новоселов, д. ">
-      <option value="г. Ноябрьск, ул. Ленина, д. ">
-      <option value="г. Ноябрьск, ул. Советская, д. ">
-      <option value="г. Ноябрьск, ул. 60 лет СССР, д. ">
-      <option value="г. Ноябрьск, ул. Мира, д. ">
-      <option value="г. Ноябрьск, ул. Республиканская, д. ">
-      <option value="г. Ноябрьск, ул. Космонавтов, д. ">
-      <option value="г. Ноябрьск, ул. Дзержинского, д. ">
-      <option value="г. Ноябрьск, ул. Изыскателей, д. ">
-      <option value="г. Ноябрьск, ул. Шевченко, д. ">
-      <option value="г. Ноябрьск, ул. Цоя, д. ">
-      <option value="г. Ноябрьск, ул. Энтузиастов, д. ">
-      <option value="г. Ноябрьск, ул. Магистральная, д. ">
-      <option value="г. Ноябрьск, ул. Высоцкого, д. ">
-      <option value="г. Ноябрьск, пр-кт Мира, д. ">
-      <option value="г. Ноябрьск, ул. Муравленко, д. ">
-      <option value="г. Ноябрьск, ул. Пионерская, д. ">
-      <option value="г. Ноябрьск, ул. Республики, д. ">
-      <option value="г. Ноябрьск, ул. Строителей, д. ">
-      <option value="г. Ноябрьск, ул. Транспортная, д. ">
-      <option value="г. Ноябрьск, ул. Школьная, д. ">
-      <option value="г. Ноябрьск, промзона, панель ">
+      <!-- Базовые улицы без префикса города — автоподстановка добавит город автоматически -->
+      <option value="ул. Новоселов, д. ">
+      <option value="ул. Ленина, д. ">
+      <option value="ул. Советская, д. ">
+      <option value="ул. 60 лет СССР, д. ">
+      <option value="ул. Мира, д. ">
+      <option value="ул. Республиканская, д. ">
+      <option value="ул. Космонавтов, д. ">
+      <option value="ул. Дзержинского, д. ">
+      <option value="ул. Изыскателей, д. ">
+      <option value="ул. Шевченко, д. ">
+      <option value="ул. Цоя, д. ">
+      <option value="ул. Энтузиастов, д. ">
+      <option value="ул. Магистральная, д. ">
+      <option value="ул. Высоцкого, д. ">
+      <option value="пр-кт Мира, д. ">
+      <option value="ул. Муравленко, д. ">
+      <option value="ул. Пионерская, д. ">
+      <option value="ул. Республики, д. ">
+      <option value="ул. Строителей, д. ">
+      <option value="ул. Транспортная, д. ">
+      <option value="ул. Школьная, д. ">
+      <option value="промзона, панель ">
     </datalist>
 
     <label>Представитель потребителя (ФИО, должн., тел.)</label>
@@ -691,6 +725,26 @@
   const tg = window.Telegram.WebApp;
   tg.expand();
 
+  // Тёмная тема: применяем CSS-переменные через класс на body
+  function applyThemeFromStorage() {
+    const t = localStorage.getItem('theme') || 'light';
+    if (t === 'dark') document.body.classList.add('dark-theme');
+    else document.body.classList.remove('dark-theme');
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) toggle.checked = (t === 'dark');
+  }
+
+  function toggleTheme() {
+    const enabled = document.getElementById('themeToggle').checked;
+    if (enabled) {
+      document.body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
   const DRAFT_KEY = 'act_form_draft_v1';
 
   document.getElementById('actDate').valueAsDate = new Date();
@@ -700,6 +754,63 @@
   toggleResourceType();
   toggleUntilDate();
   checkDraftOnLoad();
+  applyThemeFromStorage();
+  updateNetworkIndicator();
+
+  // Offline queue for send
+  const SEND_QUEUE_KEY = 'act_send_queue_v1';
+  function enqueueForSend(payload) {
+    const q = JSON.parse(localStorage.getItem(SEND_QUEUE_KEY) || '[]');
+    q.push({ts: Date.now(), data: payload});
+    localStorage.setItem(SEND_QUEUE_KEY, JSON.stringify(q));
+    showNetworkMessage('Нет сети — акт добавлен в очереди и будет отправлен автоматически.');
+    updateNetworkIndicator();
+  }
+
+  function trySendQueued() {
+    if (!navigator.onLine) return;
+    const q = JSON.parse(localStorage.getItem(SEND_QUEUE_KEY) || '[]');
+    if (!q.length) return;
+    // К попытке отправлять в порядке очереди
+    const remaining = [];
+    q.forEach(item => {
+      try {
+        tg.sendData(JSON.stringify(item.data));
+        // предполагаем успех — удаляем
+      } catch (e) {
+        remaining.push(item);
+      }
+    });
+    localStorage.setItem(SEND_QUEUE_KEY, JSON.stringify(remaining));
+    if (!remaining.length) showNetworkMessage('Очередь отправки очищена.');
+  }
+
+  window.addEventListener('online', () => { updateNetworkIndicator(); trySendQueued(); });
+  window.addEventListener('offline', () => updateNetworkIndicator());
+
+  function updateNetworkIndicator() {
+    const el = document.getElementById('networkIndicator');
+    if (!el) return;
+    if (navigator.onLine) { el.innerText = '● online'; el.style.color = 'green'; }
+    else { el.innerText = '● offline'; el.style.color = 'crimson'; }
+  }
+
+  function showNetworkMessage(text) {
+    // простое временное уведомление
+    const b = document.createElement('div');
+    b.style.position = 'fixed';
+    b.style.left = '12px';
+    b.style.right = '12px';
+    b.style.bottom = '80px';
+    b.style.background = 'var(--card-bg)';
+    b.style.border = '1px solid var(--border-color)';
+    b.style.padding = '10px';
+    b.style.borderRadius = '8px';
+    b.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+    b.innerText = text;
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 5000);
+  }
 
   // Отслеживание просрочки поверки для всех полей дат
   document.querySelectorAll('.pov-date-input').forEach(input => {
@@ -738,6 +849,66 @@
     }
     hint.innerText = text;
   }
+
+  // --- Адрес: автоподстановка и история улиц ---
+  const RECENT_STREETS_KEY = 'recent_streets_v1';
+  function loadRecentStreets() {
+    try { return JSON.parse(localStorage.getItem(RECENT_STREETS_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+  function saveRecentStreet(value) {
+    if (!value) return;
+    // сохраняем только часть после возмож префикса города
+    let v = value.replace(/г\.\s*Ноябрьск\s*,?/i, '').trim();
+    if (!v) v = value.trim();
+    const arr = loadRecentStreets();
+    const idx = arr.indexOf(v);
+    if (idx !== -1) arr.splice(idx,1);
+    arr.unshift(v);
+    if (arr.length > 10) arr.pop();
+    localStorage.setItem(RECENT_STREETS_KEY, JSON.stringify(arr));
+    updateStreetDatalist();
+  }
+
+  const defaultStreets = Array.from(document.querySelectorAll('#streetList option')).map(o=>o.value);
+  function updateStreetDatalist() {
+    const recent = loadRecentStreets();
+    const list = document.getElementById('streetList');
+    list.innerHTML = '';
+    // добавляем сначала recent
+    recent.forEach(s => { const opt = document.createElement('option'); opt.value = s; list.appendChild(opt); });
+    // затем стандартные, но не дублируя
+    defaultStreets.forEach(s => { if (!recent.includes(s)) { const opt = document.createElement('option'); opt.value = s; list.appendChild(opt); }});
+  }
+
+  document.getElementById('address').addEventListener('blur', function() { const v = this.value.trim(); if (v) saveRecentStreet(v); });
+  updateStreetDatalist();
+
+  // --- Маленькие подсказки рядом с полями ---
+  const fieldHints = {
+    actNum: 'Номер акта: укажите внутренний идентификатор (например, НО 12345).',
+    address: 'Вводите только улицу и дом. Город будет добавлен автоматически.',
+    calcType: 'Выберите модель тепловычислителя или введите вручную.',
+    prInType: 'Тип расходомера (если неизвестен — оставьте пустым).'
+  };
+
+  function addInlineHints() {
+    Object.keys(fieldHints).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const lbl = el.previousElementSibling;
+      if (!lbl || lbl.tagName !== 'LABEL') return;
+      // Не добавляем повторно
+      if (lbl.querySelector('.hint-icon')) return;
+      const span = document.createElement('span');
+      span.className = 'hint-icon';
+      span.tabIndex = 0;
+      span.innerText = 'ℹ️';
+      span.title = fieldHints[id];
+      lbl.appendChild(span);
+    });
+  }
+  addInlineHints();
 
   // БАЗА ОБОРУДОВАНИЯ
   const equipmentData = {
@@ -1108,14 +1279,22 @@
   function saveDraft() {
     const form = document.getElementById('actForm');
     const data = {};
-    const inputs = form.querySelectorAll('input, select');
-    
-    inputs.forEach(input => {
-      if (!input.id) return;
-      if (input.type === 'checkbox') {
-        data[input.id] = input.checked;
+    const elements = form.querySelectorAll('input[id], select[id], textarea[id]');
+
+    elements.forEach(el => {
+      if (!el.id) return;
+      if (el.disabled) return;
+      const t = el.type;
+      // Пропускаем кнопки и служебные элементы
+      if (t === 'button' || t === 'submit' || t === 'reset') return;
+
+      if (t === 'checkbox') {
+        // Сохраняем состояние чекбокса (true/false)
+        data[el.id] = el.checked;
       } else {
-        data[input.id] = input.value;
+        const v = (el.value || '').toString().trim();
+        // Сохраняем только непустые значения — это очищает автосохранение
+        if (v !== '') data[el.id] = el.value;
       }
     });
 
@@ -1197,6 +1376,10 @@
     const rawStatusUntilDate = document.getElementById('statusUntilDate').value;
     const untilDateValue = isMpi ? "до окончания срока МПИ" : formatDate(rawStatusUntilDate);
 
+    // Адрес: если пользователь ввёл без города — добавляем префикс
+    const rawAddress = (document.getElementById('address').value || '').toString().trim();
+    const address = rawAddress.match(/г\./i) ? rawAddress : `г. Ноябрьск, ${rawAddress}`;
+
     const formData = {
       actDate: formatValue(formatDate(document.getElementById('actDate').value)),
       actTime: formatValue(document.getElementById('actTime').value),
@@ -1205,7 +1388,7 @@
       consumer: formatValue(document.getElementById('consumer').value),
       docNum: formatValue(document.getElementById('docNum').value),
       reason: formatValue(document.getElementById('reason').value),
-      address: formatValue(document.getElementById('address').value),
+      address: formatValue(address),
       consumerRep: formatValue(document.getElementById('consumerRep').value),
 
       calcType: formatValue(document.getElementById('calcType').value),
@@ -1290,8 +1473,18 @@
       inspectorFio: formatValue(document.getElementById('inspectorFio').value)
     };
 
+    // Удаляем черновик — данные либо отправлены, либо поставлены в очередь
     localStorage.removeItem(DRAFT_KEY);
-    tg.sendData(JSON.stringify(formData));
+    if (navigator.onLine) {
+      try {
+        tg.sendData(JSON.stringify(formData));
+      } catch (e) {
+        // Если отправка через tg не удалась — ставим в очередь
+        enqueueForSend(formData);
+      }
+    } else {
+      enqueueForSend(formData);
+    }
   }
 
   // СКРЫТИЕ ЛИПКОЙ ПАНЕЛИ ПРИ ОТКРЫТИИ КЛАВИАТУРЫ
