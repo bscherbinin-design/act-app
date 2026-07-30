@@ -335,6 +335,19 @@
       margin-bottom: 8px;
     }
     .theme-switch { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--hint-color); }
+    .theme-switch input { width: auto; display: inline-block; margin: 0; transform: none; }
+    .hint-tooltip {
+      position: fixed;
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 8px 10px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      font-size: 13px;
+      max-width: 280px;
+      z-index: 1200;
+    }
     .offline-indicator { font-size: 12px; color: crimson; }
     .hint-icon { margin-left: 8px; font-size: 12px; cursor: help; }
 
@@ -904,8 +917,40 @@
       span.className = 'hint-icon';
       span.tabIndex = 0;
       span.innerText = 'ℹ️';
-      span.title = fieldHints[id];
+      span.dataset.hint = fieldHints[id];
       lbl.appendChild(span);
+
+      // Показываем кастомный тултип (поддержка мобильных и клавиатуры)
+      let tooltipEl = null;
+      function showHint() {
+        if (tooltipEl) return;
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'hint-tooltip';
+        tooltipEl.innerText = span.dataset.hint;
+        document.body.appendChild(tooltipEl);
+        const r = span.getBoundingClientRect();
+        // позиционируем тултип над и по центру иконки
+        const top = Math.max(8, r.top - tooltipEl.offsetHeight - 8);
+        const left = Math.min(window.innerWidth - tooltipEl.offsetWidth - 8, Math.max(8, r.left + (r.width - tooltipEl.offsetWidth) / 2));
+        tooltipEl.style.top = top + 'px';
+        tooltipEl.style.left = left + 'px';
+      }
+      function hideHint() {
+        if (!tooltipEl) return;
+        tooltipEl.remove();
+        tooltipEl = null;
+      }
+      span.addEventListener('mouseenter', showHint);
+      span.addEventListener('mouseleave', hideHint);
+      span.addEventListener('focus', showHint);
+      span.addEventListener('blur', hideHint);
+      span.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (tooltipEl) hideHint(); else showHint();
+        // автоматическое скрытие через 4 секунды при клике
+        if (tooltipEl) setTimeout(hideHint, 4000);
+      });
+      span.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); span.click(); } });
     });
   }
   addInlineHints();
