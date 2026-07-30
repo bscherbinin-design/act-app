@@ -136,11 +136,13 @@
 
     .row { display: flex; gap: 8px; flex-wrap: wrap; }
     .row > div { flex: 1 1 minmax(140px, 1fr); min-width: 140px; }
+    #actTime { flex: 0 0 120px; max-width: 120px; }
     .hidden { display: none !important; }
 
     @media (max-width: 620px) {
       .row { flex-direction: column; }
       .row > div { min-width: 100%; }
+      #actTime { width: 100%; flex: 1 1 100%; max-width: none; }
     }
     
     .toggle-group { 
