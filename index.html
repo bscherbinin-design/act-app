@@ -348,7 +348,6 @@
       max-width: 280px;
       z-index: 1200;
     }
-    .offline-indicator { font-size: 12px; color: crimson; }
     .hint-icon { margin-left: 8px; font-size: 12px; cursor: help; }
 
     /* Тёмная тема — переключение через класс на body */
@@ -374,7 +373,6 @@
         <span>Тёмная тема</span>
       </label>
     </div>
-    <div id="networkIndicator" class="offline-indicator" title="Статус сети">● offline</div>
   </div>
   <div id="progressBar"></div>
 
@@ -739,25 +737,9 @@
   // создаём безопасный fallback, чтобы дальнейший JS не падал с ошибкой.
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : {
     expand: () => {},
-    // sendData в fallback просто кладёт данные в локальную очередь отправки,
-    // чтобы акт не терялся при отсутствии Telegram API/сети.
     sendData: (payload) => {
-      try {
-        const key = 'act_send_queue_v1';
-        const q = JSON.parse(localStorage.getItem(key) || '[]');
-        // payload может быть строкой JSON или объект — приводим к строке
-        let obj = payload;
-        if (typeof payload === 'string') obj = JSON.parse(payload);
-        q.push({ ts: Date.now(), data: obj });
-        localStorage.setItem(key, JSON.stringify(q));
-        // не вызываем showNetworkMessage здесь — функция может быть определена позже
-        console.warn('tg.sendData fallback: queued payload locally');
-      } catch (e) {
-        console.warn('tg.sendData fallback failed', e);
-        try { localStorage.setItem('tg_fallback_last', typeof payload === 'string' ? payload : JSON.stringify(payload)); } catch (e2) {}
-      }
+      console.warn('tg.sendData fallback: Telegram WebApp API unavailable; payload not sent', payload);
     },
-    // showConfirm отсутствует в fallback — код проверяет наличие перед вызовом
     showConfirm: null
   };
   // Вызов expand безопасен в любом случае
@@ -793,62 +775,6 @@
   toggleUntilDate();
   checkDraftOnLoad();
   applyThemeFromStorage();
-  updateNetworkIndicator();
-
-  // Offline queue for send
-  const SEND_QUEUE_KEY = 'act_send_queue_v1';
-  function enqueueForSend(payload) {
-    const q = JSON.parse(localStorage.getItem(SEND_QUEUE_KEY) || '[]');
-    q.push({ts: Date.now(), data: payload});
-    localStorage.setItem(SEND_QUEUE_KEY, JSON.stringify(q));
-    showNetworkMessage('Нет сети — акт добавлен в очереди и будет отправлен автоматически.');
-    updateNetworkIndicator();
-  }
-
-  function trySendQueued() {
-    if (!navigator.onLine) return;
-    const q = JSON.parse(localStorage.getItem(SEND_QUEUE_KEY) || '[]');
-    if (!q.length) return;
-    // К попытке отправлять в порядке очереди
-    const remaining = [];
-    q.forEach(item => {
-      try {
-        tg.sendData(JSON.stringify(item.data));
-        // предполагаем успех — удаляем
-      } catch (e) {
-        remaining.push(item);
-      }
-    });
-    localStorage.setItem(SEND_QUEUE_KEY, JSON.stringify(remaining));
-    if (!remaining.length) showNetworkMessage('Очередь отправки очищена.');
-  }
-
-  window.addEventListener('online', () => { updateNetworkIndicator(); trySendQueued(); });
-  window.addEventListener('offline', () => updateNetworkIndicator());
-
-  function updateNetworkIndicator() {
-    const el = document.getElementById('networkIndicator');
-    if (!el) return;
-    if (navigator.onLine) { el.innerText = '● online'; el.style.color = 'green'; }
-    else { el.innerText = '● offline'; el.style.color = 'crimson'; }
-  }
-
-  function showNetworkMessage(text) {
-    // простое временное уведомление
-    const b = document.createElement('div');
-    b.style.position = 'fixed';
-    b.style.left = '12px';
-    b.style.right = '12px';
-    b.style.bottom = '80px';
-    b.style.background = 'var(--card-bg)';
-    b.style.border = '1px solid var(--border-color)';
-    b.style.padding = '10px';
-    b.style.borderRadius = '8px';
-    b.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
-    b.innerText = text;
-    document.body.appendChild(b);
-    setTimeout(() => b.remove(), 5000);
-  }
 
   // Отслеживание просрочки поверки для всех полей дат
   document.querySelectorAll('.pov-date-input').forEach(input => {
@@ -1543,17 +1469,12 @@
       inspectorFio: formatValue(document.getElementById('inspectorFio').value)
     };
 
-    // Удаляем черновик — данные либо отправлены, либо поставлены в очередь
     localStorage.removeItem(DRAFT_KEY);
-    if (navigator.onLine) {
-      try {
-        tg.sendData(JSON.stringify(formData));
-      } catch (e) {
-        // Если отправка через tg не удалась — ставим в очередь
-        enqueueForSend(formData);
-      }
-    } else {
-      enqueueForSend(formData);
+    try {
+      tg.sendData(JSON.stringify(formData));
+    } catch (e) {
+      console.warn('Ошибка отправки акта через Telegram WebApp API', e);
+      alert('Не удалось отправить акт. Проверьте подключение к интернету и повторите.');
     }
   }
 
