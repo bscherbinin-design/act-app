@@ -735,8 +735,33 @@
 </div>
 
 <script>
-  const tg = window.Telegram.WebApp;
-  tg.expand();
+  // Защитный доступ к Telegram WebApp API — если скрипт не загружен (нет сети),
+  // создаём безопасный fallback, чтобы дальнейший JS не падал с ошибкой.
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : {
+    expand: () => {},
+    // sendData в fallback просто кладёт данные в локальную очередь отправки,
+    // чтобы акт не терялся при отсутствии Telegram API/сети.
+    sendData: (payload) => {
+      try {
+        const key = 'act_send_queue_v1';
+        const q = JSON.parse(localStorage.getItem(key) || '[]');
+        // payload может быть строкой JSON или объект — приводим к строке
+        let obj = payload;
+        if (typeof payload === 'string') obj = JSON.parse(payload);
+        q.push({ ts: Date.now(), data: obj });
+        localStorage.setItem(key, JSON.stringify(q));
+        // не вызываем showNetworkMessage здесь — функция может быть определена позже
+        console.warn('tg.sendData fallback: queued payload locally');
+      } catch (e) {
+        console.warn('tg.sendData fallback failed', e);
+        try { localStorage.setItem('tg_fallback_last', typeof payload === 'string' ? payload : JSON.stringify(payload)); } catch (e2) {}
+      }
+    },
+    // showConfirm отсутствует в fallback — код проверяет наличие перед вызовом
+    showConfirm: null
+  };
+  // Вызов expand безопасен в любом случае
+  try { tg.expand(); } catch (e) { /* noop */ }
 
   // Тёмная тема: применяем CSS-переменные через класс на body
   function applyThemeFromStorage() {
