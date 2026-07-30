@@ -134,9 +134,14 @@
       font-weight: bold;
     }
 
-    .row { display: flex; gap: 8px; }
-    .row > div { flex: 1; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .row > div { flex: 1 1 minmax(140px, 1fr); min-width: 140px; }
     .hidden { display: none !important; }
+
+    @media (max-width: 620px) {
+      .row { flex-direction: column; }
+      .row > div { min-width: 100%; }
+    }
     
     .toggle-group { 
       display: flex; 
